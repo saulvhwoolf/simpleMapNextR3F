@@ -6,15 +6,6 @@ import {FlyControls, MapControls, OrbitControls, Sky} from "@react-three/drei";
 import {useRouter, useSearchParams} from "next/navigation";
 import * as util from "../util";
 
-const API_DATA = [
-    ["south", "28.55"],
-    ["north", "28.65"],
-    ["west", "83.85"],
-    ["east", "83.95"],
-]
-const API_URL = "http://localhost:3000/api/getHeightMap"
-
-
 export function Map3dComponent() {
     const [heightMapUrl, setHeightMapUrl] = React.useState(null)
     const [heightRange, setHeightRange] = React.useState(null)
@@ -67,11 +58,6 @@ export function Map3dComponent() {
                     <p>LOADING</p>
                 </>
             }
-            {/*<img id={"img_img"} src={"https://picsum.photos/200/300"} width={500} height={500}></img>*/}
-
-            {/*<Image src={"https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1&south=28.55&north=28.65&west=83.85&east=83.95&outputFormat=GTiff&API_Key=2c66270018613ef769655d9c553de8ba"} width={500} height={500}></Image>*/}
-            {/*<img src={"/api/getHeightMap"} style={{"width": "500px", "height": "500px"}} alt=""/>*/}
-
         </>
     );
 
