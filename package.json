@@ -1,0 +1,30 @@
+{
+  "name": "imthemap",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@react-google-maps/api": "^2.19.2",
+    "@react-three/drei": "^9.78.2",
+    "@react-three/fiber": "^8.13.5",
+    "@react-three/postprocessing": "^2.15.0",
+    "axios": "^1.6.5",
+    "geotiff": "^2.1.1",
+    "jpeg-js": "^0.4.4",
+    "next": "^14.0.4",
+    "react": "^18.2.0",
+    "three": "^0.160.0",
+    "tiff": "^5.0.3",
+    "tiff.js": "^1.0.0",
+    "utif": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.0",
+    "typescript": "5.3.3"
+  }
+}
