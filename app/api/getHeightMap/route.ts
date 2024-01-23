@@ -3,13 +3,12 @@ import {NextRequest, NextResponse} from "next/server";
 import path from "path";
 import * as fs from 'fs';
 
-const fsp = require("fs").promises;
-
 import axios from "axios";
-import {fromArrayBuffer} from "geotiff";
-import * as jpeg from 'jpeg-js';
-import {json} from "stream/consumers";
-import {useRouter} from "next/navigation";
+import {fromArrayBuffer} from "geotiff/dist-module/geotiff";
+import * as jpeg from "jpeg-js";
+
+
+export const maxDuration = 600
 
 export async function GET(request: NextRequest) {
     console.log("Seeking...")
@@ -52,17 +51,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({"img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
 }
 
-// ********   COORDINATE VALIDATION **********
-function isValidLongitude(lng) {
-    return !isNaN(lng) && ((-180 < lng) && (lng < 180))
-}
 
-function isValidLatitude(lat) {
-    return !isNaN(lat) && ((-180 < lat) && (lat < 180))
-}
-
-
-function getAndValidateCoordinates(request: NextRequest) {
+export function getAndValidateCoordinates(request) {
     // const router = useRouter()
     // const { east, west, north, south } = router.query
     let east = request.nextUrl.searchParams.get("east")
@@ -84,37 +74,34 @@ function getAndValidateCoordinates(request: NextRequest) {
     if (!(isValidLatitude(coords["east"]) && isValidLatitude(coords["west"])
         && isValidLongitude(coords["north"]) && isValidLongitude(coords["south"]))) {
         return [null, "Invalid Coordinates " +
-                "Latitude:(" + coords["west"] + "," + coords["east"] + ")  " +
-                "Longitude:(" + coords["south"] + "," + coords["north"] + ")"]
-        // NextResponse.json({
-        //     status: 500,
-        //     message: "Invalid Coordinates " +
-        //         "Latitude:(" + coords["west"] + "," + coords["east"] + ")  " +
-        //         "Longitude:(" + coords["south"] + "," + coords["north"] + ")",
-        // });
+        "Latitude:(" + coords["west"] + "," + coords["east"] + ")  " +
+        "Longitude:(" + coords["south"] + "," + coords["north"] + ")"]
     }
 
     return [coords, null]
 }
 
-function scale(val, min, max, scale) {
+
+
+// ********   COORDINATE VALIDATION **********
+export function isValidLongitude(lng) {
+    return !isNaN(lng) && ((-180 < lng) && (lng < 180))
+}
+
+export function isValidLatitude(lat) {
+    return !isNaN(lat) && ((-180 < lat) && (lat < 180))
+}
+
+
+export function scale(val, min, max, scale) {
     return ((val - min) / (max - min)) * scale
 }
 
 
 // ********   QUERY URL **********
-const API_DATA = [
-    ["demtype", "SRTMGL1"],
-    ["outputFormat", "GTiff"],
-    ["API_Key", "2c66270018613ef769655d9c553de8ba"]
-]
-
-function generateQueryUrl(coords) {
+export function generateQueryUrl(coords) {
     // https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south=28.55&north=28.65&west=83.85&east=83.95&outputFormat=GTiff&API_Key=2c66270018613ef769655d9c553de8ba
     const url = "https://portal.opentopography.org/API/globaldem"
-    // const queryString1 = API_DATA.map((arr) => {
-    //     return arr[0] + "=" + arr[1]
-    // }).join("&")
     const queryString1 = "demtype=SRTMGL3"
     const queryString2 = [ "south","north", "west", "east"].map((v) => {
         return v + "=" + coords[v]
@@ -126,17 +113,17 @@ function generateQueryUrl(coords) {
 }
 
 // ********   FILES  **********
-function generateFilename(coords) {
+export function generateFilename(coords) {
     return "heightMap_e" + coords["east"] + "_w" + coords["west"] + "_s" + coords["south"] + "_n" + coords["north"]
 }
 
 
-async function downloadTif(url, filename) {
+export async function downloadTif(url, filename) {
     const axRes = await axios.get(url, {responseType: 'arraybuffer'})
-    await fsp.writeFile(filename, axRes.data)
+    await fs.promises.writeFile(filename, axRes.data)
 }
 
-async function convertTifToJpgAndJson(tifPath, jpgPath, jsonPath) {
+export async function convertTifToJpgAndJson(tifPath, jpgPath, jsonPath) {
     console.log("... Load and Raster...")
     const tiffData = fs.readFileSync(tifPath);
     const arrayBuffer = tiffData.buffer.slice(tiffData.byteOffset, tiffData.byteOffset + tiffData.byteLength);
@@ -176,12 +163,11 @@ async function convertTifToJpgAndJson(tifPath, jpgPath, jsonPath) {
     const jpegBuffer = jpeg.encode(jpegImageData, 90).data; // 90 is the quality
 
     console.log("... Saving Jpg ...")
-    await fsp.writeFile(jpgPath, jpegBuffer, {});
+    await fs.promises.writeFile(jpgPath, jpegBuffer, {});
 
     console.log("... Saving Json ...")
-    await fsp.writeFile(jsonPath, JSON.stringify({
+    await fs.promises.writeFile(jsonPath, JSON.stringify({
         "MIN": min, "MAX": max,
         "WIDTH": width, "HEIGHT": height
     }), {});
-
 }

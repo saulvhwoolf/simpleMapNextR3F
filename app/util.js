@@ -1,6 +1,5 @@
 
 
-
 const API_URL = "/api/getHeightMap"
 export async function getHeightMap(west=0, east=0, south=0, north=0) {
     // let queryString = API_DATA.map((arr)=>{return arr[0] + "=" + arr[1]}).join("&")
@@ -14,3 +13,5 @@ export async function getHeightMap(west=0, east=0, south=0, north=0) {
 
     return await res.json()
 }
+
+
