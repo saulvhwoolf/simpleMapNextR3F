@@ -54,11 +54,11 @@ export async function GET(request: NextRequest) {
 
 // ********   COORDINATE VALIDATION **********
 function isValidLongitude(lng) {
-    return !isNaN(lng) && (-180 < lng < 180)
+    return !isNaN(lng) && ((-180 < lng) && (lng < 180))
 }
 
 function isValidLatitude(lat) {
-    return !isNaN(lat) && (-180 < lat < 180)
+    return !isNaN(lat) && ((-180 < lat) && (lat < 180))
 }
 
 
