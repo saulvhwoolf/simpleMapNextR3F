@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 
 import {generateFilename, timeout} from "../../util";
 
-import {fromUrl} from "geotiff";
+import {fromArrayBuffer, fromBlob, fromUrl} from "geotiff";
 import * as jpeg from "jpeg-js";
 import {Storage} from "@google-cloud/storage";
 
@@ -123,15 +123,16 @@ function generateQueryUrl(coords) {
 
 async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath) {
     await fetch(url, {}).then(async (res) => {
-        console.log("[] downloading to bucket", tifPath, res.status, res.url)
-        await uploadFileToBucket(res.body, tifPath)
+        console.log("[] downloading tif", res.status)
 
-        console.log("[] load from bucket", tifPublicPath)
+        const blob = await res.blob()
+        console.log("[] converting to blob for tif", blob)
         // const tiff2 = await fromUrl("https://storage.googleapis.com/ele-map-collection/public/heightMap_e83.95_w83.55_s28.55_n28.65.tif");
-        const tiff2 = await fromUrl(tifPublicPath);
+        const tiff = await fromArrayBuffer(await blob.arrayBuffer());
+        // const tiff2 = await fromUrl(tifPublicPath);
         console.log("[] loaded, converting")
 
-        const image = await tiff2.getImage(), raster = await image.readRasters();
+        const image = await tiff.getImage(), raster = await image.readRasters();
         const width = image.getWidth(), height = image.getHeight();
 
         // Assuming a greyscale image for simplicity; adjust for other types
@@ -146,7 +147,6 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
         }
         // console.log("... Min Height:" + min + " and Max Height " + max)
 
-        // console.log("... Scaling Down ...")
         for (let i = 0; i < width * height; i++) {
             let val = scale(raster[0][i], min, max, 255)
             rgbaBuffer[i * 4] = val;     // Red
@@ -185,7 +185,6 @@ async function uploadFileToBucket(fileIn, filename) {
         expires: Date.now() + 60 * 60000, //  60 minute,
         fields: { 'x-goog-meta-test': 'data' },
     });
-    await timeout(2000)
 
 
     file.save(fileIn, (err) => {
@@ -195,7 +194,7 @@ async function uploadFileToBucket(fileIn, filename) {
             console.log("error " + err);
         }
     });
-    await timeout(8000)
+    // await timeout(8000)
 
 
     const ifExist = (await file.exists())[0]; // (await brackets) needed
