@@ -84,12 +84,12 @@ async function bucketHasFile(filename) {
 }
 
 function GetBucket(){
-    console.log(process.env.PRIVATE_KEY.split(String.raw`\n`).join('\n'))
+    console.log("rows in privkey:", process.env.PRIVATE_KEY.split(String.raw`\n`).length)
     const storage = new Storage({
         projectId: process.env.PROJECT_ID,
         credentials: {
             client_email: process.env.CLIENT_EMAIL,
-            private_key: process.env.PRIVATE_KEY.split(String.raw`\n`).join('\n'),
+            private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n')
         },
     });
 
