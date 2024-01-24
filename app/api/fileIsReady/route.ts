@@ -2,6 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 
 import path from "path";
 import * as fs from 'fs';
+import {generateFilename} from "../../util";
 
 
 export async function GET(request: NextRequest) {
@@ -73,7 +74,5 @@ function isValidLatitude(lat) {
 
 
 // ********   FILES  **********
-export function generateFilename(coords) {
-    return "heightMap_e" + coords["east"] + "_w" + coords["west"] + "_s" + coords["south"] + "_n" + coords["north"]
-}
+
 

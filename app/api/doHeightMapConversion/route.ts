@@ -2,6 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 
 import path from "path";
 import * as fs from 'fs';
+import {generateFilename} from "../../util";
 
 import axios from "axios";
 import {fromArrayBuffer} from "geotiff";
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 }
 
 
-export function getAndValidateCoordinates(request) {
+function getAndValidateCoordinates(request) {
     let east = request.nextUrl.searchParams.get("east")
     let west = request.nextUrl.searchParams.get("west")
     let south = request.nextUrl.searchParams.get("south")
@@ -83,22 +84,22 @@ export function getAndValidateCoordinates(request) {
 
 
 // ********   COORDINATE VALIDATION **********
-export function isValidLongitude(lng) {
+function isValidLongitude(lng) {
     return !isNaN(lng) && ((-180 < lng) && (lng < 180))
 }
 
-export function isValidLatitude(lat) {
+function isValidLatitude(lat) {
     return !isNaN(lat) && ((-180 < lat) && (lat < 180))
 }
 
 
-export function scale(val, min, max, scale) {
+function scale(val, min, max, scale) {
     return ((val - min) / (max - min)) * scale
 }
 
 
 // ********   QUERY URL **********
-export function generateQueryUrl(coords) {
+function generateQueryUrl(coords) {
     // https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south=28.55&north=28.65&west=83.85&east=83.95&outputFormat=GTiff&API_Key=2c66270018613ef769655d9c553de8ba
     const url = "https://portal.opentopography.org/API/globaldem"
     const queryString1 = "demtype=SRTMGL3"
@@ -112,17 +113,15 @@ export function generateQueryUrl(coords) {
 }
 
 // ********   FILES  **********
-export function generateFilename(coords) {
-    return "heightMap_e" + coords["east"] + "_w" + coords["west"] + "_s" + coords["south"] + "_n" + coords["north"]
-}
 
 
-export async function downloadTif(url, filename) {
+
+async function downloadTif(url, filename) {
     const axRes = await axios.get(url, {responseType: 'arraybuffer'})
     await fs.promises.writeFile(filename, axRes.data)
 }
 
-export async function convertTifToJpgAndJson(tifPath, jpgPath, jsonPath) {
+async function convertTifToJpgAndJson(tifPath, jpgPath, jsonPath) {
     console.log("... Load and Raster...")
     const tiffData = fs.readFileSync(tifPath);
     const arrayBuffer = tiffData.buffer.slice(tiffData.byteOffset, tiffData.byteOffset + tiffData.byteLength);

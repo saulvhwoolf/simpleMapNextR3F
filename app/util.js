@@ -28,3 +28,8 @@ export async function doHeightMapConversion(west=0, east=0, south=0, north=0) {
 }
 
 
+export function generateFilename(coords) {
+    return "heightMap_e" + coords["east"] + "_w" + coords["west"] + "_s" + coords["south"] + "_n" + coords["north"]
+}
+
+
