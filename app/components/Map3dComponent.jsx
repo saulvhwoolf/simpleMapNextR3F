@@ -4,7 +4,7 @@ import {Canvas} from "@react-three/fiber";
 import {Terrain} from "../Terrain";
 import {FlyControls, MapControls, OrbitControls, Sky} from "@react-three/drei";
 import {useRouter, useSearchParams} from "next/navigation";
-import * as util from "../util";
+import {getHeightMap} from "../util";
 
 export function Map3dComponent() {
     const [heightMapUrl, setHeightMapUrl] = React.useState(null)
@@ -19,7 +19,7 @@ export function Map3dComponent() {
 
     useEffect(() => {
         if (heightMapUrl == null) {
-            util.getHeightMap(west, east, south, north).then(async (hm) => {
+            getHeightMap(west, east, south, north).then(async (hm) => {
                 const res = await fetch(hm["json"])
                 console.log(hm["img"], hm["json"])
                 const vals = await res.json()
@@ -39,7 +39,7 @@ export function Map3dComponent() {
                     <div className={"cellContainer"}>
                         <Canvas camera={{position: [10, 30, 40] }}>
                             <fog attach="fog" args={["white", 10, 130]} />
-                            <OrbitControls/>
+                            <OrbitControls autoRotate={true} autoRotateSpeed={1}/>
                             {/*<FlyControls/>*/}
                             {/*<MapControls/>*/}
                             {/*<Controls*/}

@@ -3,14 +3,14 @@ import {NextRequest, NextResponse} from "next/server";
 import path from "path";
 import {generateFilename} from "../../util";
 import {Storage} from "@google-cloud/storage";
+import * as util from "../../util";
 
 
 export async function GET(request: NextRequest) {
-    console.log("... checking")
+    util.log("........ checking")
 
     const val = getAndValidateCoordinates(request)
     const coords = val[0], err = val[1]
-    // console.log(coords, err)
     if (err != null) {
         return NextResponse.json({status: 500, message: err});
     }
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const jsonPath = filepath + path.sep + jsonFilename
 
     if (await bucketHasFile(jpgPath) && await bucketHasFile(jsonPath)) {
-        console.log("...found download! [" + jpgFilename + ", " + jsonPath + "]")
+        util.log("........ SUCCESS FOUND FILES [" + jpgFilename + ", " + jsonPath + "]")
         return NextResponse.json({status: 200, ready: false, message: "done", "img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
     } else {
         return NextResponse.json({status: 204, ready: true, message: "still working"})
@@ -75,16 +75,12 @@ function isValidLatitude(lat) {
 }
 
 // ********   FILES  **********
-
-
 async function bucketHasFile(filename) {
     const res = await GetBucket().file(filename).exists()
-    // console.log(filename, res[0], res)
     return res[0]
 }
 
 function GetBucket(){
-    console.log("rows in privkey:", process.env.PRIVATE_KEY.split(String.raw`\n`).length)
     const storage = new Storage({
         projectId: process.env.PROJECT_ID,
         credentials: {

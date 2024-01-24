@@ -1,0 +1,84 @@
+.movepadContainer {
+  width: 240px;
+  height: 240px;
+  border: thin solid black;
+  border-radius: 10px;
+  background-color: antiquewhite;
+  color: black;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: minmax(80px, auto);
+  overflow: hidden;
+}
+
+.buttonContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  width: 80px;
+}
+
+.button {
+  font-size: 50px;
+  border: none;
+  scale: 1.0;
+  background-color: rgba(0,0,0,0);
+  font-weight: bolder;
+}
+
+.button:hover {
+  scale: 1.2;
+  cursor: pointer;
+}
+
+
+
+
+.altButton {
+  font-size: 35px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+}
+
+.altButton > * {
+  display: inline-block;
+
+}
+
+.disabledButtonStyle {
+  border-radius: 10px;
+  border: thin solid black;
+  padding: 5px;
+  margin: 0 auto;
+  text-decoration: line-through;
+  pointer-events: None
+}
+
+.enabledButtonStyle {
+  border-radius: 10px;
+  border: thin solid black;
+  padding: 5px;
+  margin: 0 auto;
+}
+
+
+
+.locationList {
+  list-style: none;
+}
+.locationListItem {
+  display: inline-block;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 10px;
+  border: thin solid black;
+  scale: 1.0;
+  cursor: pointer;
+}
+.locationListItem:hover {
+  scale: 1.1;
+}

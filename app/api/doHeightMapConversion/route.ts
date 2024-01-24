@@ -5,68 +5,55 @@ import {generateFilename, timeout} from "../../util";
 import {fromArrayBuffer, fromBlob, fromUrl} from "geotiff";
 import * as jpeg from "jpeg-js";
 import {Storage} from "@google-cloud/storage";
+import * as util from "../../util";
+import * as Util from "util";
 
 
 export async function GET(request: NextRequest) {
-    console.log("Seeking...")
+    util.log("HANDLING... " + request.url)
 
     const res = getAndValidateCoordinates(request)
     const coords = res[0], err = res[1]
-    if (coords == null) {
+    if (coords == null)
         return NextResponse.json({status: 500, message: err});
-    }
+    util.log("... Latitude:(" + coords["west"] + "," + coords["east"] + ")  Longitude:(" + coords["south"] + "," + coords["north"] + ")")
 
     const wireframeUrl = "/wireframe?"+request.url.split("?")[1]
+    const apiQueryUrl = generateQueryUrl(coords)
+    util.log("... API URL: "+ apiQueryUrl)
 
-
-    console.log("... Latitude:(" + coords["west"] + "," + coords["east"] + ")  Longitude:(" + coords["south"] + "," + coords["north"] + ")")
-
-    const url = generateQueryUrl(coords)
-    console.log("... URL: "+ url)
-    // const filepath = "heightMap_e83.95_w83.55_s28.55_n28.65.tif\n"
-    const filepath = "public"
     const filename = generateFilename(coords)
-    const jpgFilename = filename + ".jpg"
-    const tifFilename = filename + ".tif"
-    const jsonFilename = filename + ".json"
-    const jpgPath = filepath + "/" + jpgFilename
-    const tifPath = filepath + "/" + tifFilename
-    const jsonPath = filepath + "/" + jsonFilename
+    const jpgFilename = filename + ".jpg",
+        tifFilename = filename + ".tif",
+        jsonFilename = filename + ".json"
 
-    const publicpath = "https://storage.googleapis.com/ele-map-collection/public"
-    const jpgPublicPath = publicpath + "/" + jpgFilename
-    const tifPublicPath = publicpath + "/" + tifFilename
-    const jsonPublicPath = publicpath + "/" + jsonFilename
+    const filepath = "public"
+    const jpgPath = filepath + "/" + jpgFilename,
+        tifPath = filepath + "/" + tifFilename,
+        jsonPath = filepath + "/" + jsonFilename
+
+    const publicPath = "https://storage.googleapis.com/ele-map-collection/public"
+    const jpgPublicPath = publicPath + "/" + jpgFilename,
+        tifPublicPath = publicPath + "/" + tifFilename,
+        jsonPublicPath = publicPath + "/" + jsonFilename
 
 
     if (await bucketHasFile(jpgPath) && await bucketHasFile(jsonPath)) {
-    // if (fs.js.existsSync(jpgPath) && fs.js.existsSync((jsonPath))) {
-        console.log("Already Downloaded [" + jpgFilename + "] -- sending response")
+        util.log("... ALREADY DOWNLOADED [" + jpgFilename + "] -- sending response")
         return NextResponse.json({"img": jpgPublicPath, "json": jsonPublicPath, "url":wireframeUrl})
-    }
-
-    if (await bucketHasFile(jpgPath)) {
-        console.log("Already Downloaded [" + tifFilename + "] ...")
     } else {
-        console.log("Downloading and Converting [" + tifFilename + "] ...")
-        console.log("... "+url)
-        await downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath)
+        util.log("... DOWNLOADING AND CONVERTING [" + tifFilename + "] ...")
+        await downloadTifJpgJson(apiQueryUrl, tifPath, tifPublicPath, jpgPath, jsonPath)
     }
-
-    // console.log("Converting to Jpg [" + tifFilename + "] ...")
-    // console.log("... " + tifPublicPath)
-    // await convertTifToJpgAndJson(tifPublicPath, jpgPath, jsonPath)
 
     return NextResponse.json({"img": jpgPublicPath, "json": jsonPublicPath, "url":wireframeUrl})
-    // return NextResponse.json({status:200, message: "starting conversion"})
 }
 
-
 function getAndValidateCoordinates(request) {
-    let east = request.nextUrl.searchParams.get("east")
-    let west = request.nextUrl.searchParams.get("west")
-    let south = request.nextUrl.searchParams.get("south")
-    let north = request.nextUrl.searchParams.get("north")
+    let east = request.nextUrl.searchParams.get("east"),
+        west = request.nextUrl.searchParams.get("west"),
+        south = request.nextUrl.searchParams.get("south"),
+        north = request.nextUrl.searchParams.get("north")
 
     if (!(typeof east === "string" && typeof west === "string" && typeof south === "string" && typeof north === "string")) {
         return [null, "Invalid coordinates"]
@@ -89,7 +76,6 @@ function getAndValidateCoordinates(request) {
 }
 
 
-
 // ********   COORDINATE VALIDATION **********
 function isValidLongitude(lng) {
     return !isNaN(lng) && ((-180 < lng) && (lng < 180))
@@ -107,7 +93,6 @@ function scale(val, min, max, scale) {
 
 // ********   QUERY URL **********
 function generateQueryUrl(coords) {
-    // https://portal.opentopography.org/API/globaldem?demtype=SRTMGL3&south=28.55&north=28.65&west=83.85&east=83.95&outputFormat=GTiff&API_Key=2c66270018613ef769655d9c553de8ba
     const url = "https://portal.opentopography.org/API/globaldem"
     const queryString1 = "demtype=SRTMGL3"
     const queryString2 = [ "south","north", "west", "east"].map((v) => {
@@ -116,21 +101,18 @@ function generateQueryUrl(coords) {
     const queryString3 = "outputFormat=GTiff&API_Key="+process.env.TOPO_API_KEY
 
     return url + "?" + queryString1 + "&" + queryString2 + "&" + queryString3
-
 }
 
 // ********   FILES  **********
-
 async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath) {
     await fetch(url, {}).then(async (res) => {
-        console.log("[] downloading tif", res.status)
+        util.log("...... downloading tif /" + res.status +"\\")
 
         const blob = await res.blob()
-        console.log("[] converting to blob for tif", blob)
-        // const tiff2 = await fromUrl("https://storage.googleapis.com/ele-map-collection/public/heightMap_e83.95_w83.55_s28.55_n28.65.tif");
+        util.log("...... converting tif to blob /" + res.status +"\\")
+
         const tiff = await fromArrayBuffer(await blob.arrayBuffer());
-        // const tiff2 = await fromUrl(tifPublicPath);
-        console.log("[] loaded, converting")
+        util.log("...... blob to arraybuffer")
 
         const image = await tiff.getImage(), raster = await image.readRasters();
         const width = image.getWidth(), height = image.getHeight();
@@ -145,7 +127,6 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
             if (max == null || max < val)
                 max = val
         }
-        // console.log("... Min Height:" + min + " and Max Height " + max)
 
         for (let i = 0; i < width * height; i++) {
             let val = scale(raster[0][i], min, max, 255)
@@ -163,16 +144,18 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
         };
         const jpegBuffer = jpeg.encode(jpegImageData, 90).data; // 90 is the quality
 
-        console.log("... Saving Jpg ...")
+        util.log("...... Saving Jpg")
         await uploadFileToBucket(jpegBuffer, jpgPath);
         // await fs.js.promises.writeFile(jpgPath, jpegBuffer, {});
 
-        console.log("... Saving Json ...")
+        util.log("...... Saving Json")
         await uploadFileToBucket(JSON.stringify({
             "MIN": min, "MAX": max,
             "WIDTH": width, "HEIGHT": height
         }), jsonPath);
-        console.log("... DONE ...")
+
+
+        util.log("...... Conversion done!")
     })
 
 }
@@ -180,32 +163,27 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
 
 async function uploadFileToBucket(fileIn, filename) {
     const file = GetBucket().file(filename);
-    console.log("attempting to save")
     const [response] = await file.generateSignedPostPolicyV4({
         expires: Date.now() + 60 * 60000, //  60 minute,
         fields: { 'x-goog-meta-test': 'data' },
     });
 
-
     file.save(fileIn, (err) => {
         if (!err) {
-            console.log(".. upload successful");
+            util.log("... upload successful: " + filename);
         } else {
-            console.log("error " + err);
+            util.log("... !upload failed!: " + filename + " ||||| " + err);
         }
     });
-    // await timeout(8000)
-
 
     const ifExist = (await file.exists())[0]; // (await brackets) needed
-    console.log("[] done uploading!")
+    util.log("... " + ifExist + " <-- found file?")
     return ifExist
 }
 
 
 async function bucketHasFile(filename) {
     const res = await GetBucket().file(filename).exists()
-    // console.log(filename, res[0], res)
     return res[0]
 }
 
