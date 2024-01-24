@@ -188,7 +188,7 @@ async function uploadFileToBucket(fileIn, filename) {
             console.log("error " + err);
         }
     });
-    // await timeout(5000)
+    await timeout(15000)
 
     // const [response] = await file.generateSignedPostPolicyV4({
     //     expires: Date.now() + 60 * 1000, //  1 minute,
