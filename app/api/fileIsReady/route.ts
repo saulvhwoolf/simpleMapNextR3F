@@ -15,10 +15,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({status: 500, message: err});
     }
 
+    let wireframeUrl = "/wireframe"
     if (request.url != undefined) {
-        const wireframeUrl = "/wireframe"
-    } else {
-        const wireframeUrl = "/wireframe?" + request.url.split("?")[1]
+        wireframeUrl += request.url.split("?")[1]
     }
 
     const filepath = "public"
