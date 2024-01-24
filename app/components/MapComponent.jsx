@@ -99,7 +99,7 @@ export function MapComponent() {
             // console.log(status, jsonResult)
             if (jsonResult["status"] === 204) {
                 console.log("retrying...("+i+")")
-                if (i < 10) {
+                if (i < 15) {
                     checkStatus(i+1)
                 }
             } else if (jsonResult["status"] === 200) {
@@ -108,7 +108,7 @@ export function MapComponent() {
                 setLoading(false)
                 console.log("done")
             }
-        }, 3000)
+        }, 5000)
     }
 
     const submitCoordinates = async () => {

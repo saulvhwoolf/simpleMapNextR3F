@@ -124,7 +124,7 @@ function generateQueryUrl(coords) {
 async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath) {
     await fetch(url, {}).then(async (res) => {
         console.log("[] downloading to bucket")
-        await uploadFileToBucket(res.body, tifPath)
+        await uploadFileToBucket(await res.body, tifPath)
 
         console.log("[] load from bucket", tifPublicPath)
         // const tiff2 = await fromUrl("https://storage.googleapis.com/ele-map-collection/public/heightMap_e83.95_w83.55_s28.55_n28.65.tif");
