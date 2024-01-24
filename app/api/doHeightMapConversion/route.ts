@@ -123,7 +123,7 @@ function generateQueryUrl(coords) {
 
 async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath) {
     await fetch(url, {}).then(async (res) => {
-        console.log("[] downloading to bucket")
+        console.log("[] downloading to bucket", tifPath, res.status, res.url)
         await uploadFileToBucket(res.body, tifPath)
 
         console.log("[] load from bucket", tifPublicPath)
@@ -185,6 +185,8 @@ async function uploadFileToBucket(fileIn, filename) {
         expires: Date.now() + 60 * 60000, //  60 minute,
         fields: { 'x-goog-meta-test': 'data' },
     });
+    await timeout(2000)
+
 
     file.save(fileIn, (err) => {
         if (!err) {
