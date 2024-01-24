@@ -125,6 +125,7 @@ div {
   /*margin: 20px;*/
   line-height: 3px;
   background: rgb(50 50 50);
+  max-width: 80vw;
 
   width: 800px;
   height: 800px;

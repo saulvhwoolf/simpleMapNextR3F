@@ -7,8 +7,10 @@ import {doHeightMapConversion} from "../util";
 
 
 const containerStyle = {
+    maxWidth: '80vw',
+    margin: '0 auto',
     width: '800px',
-    height: '500px'
+    height: '500px',
 };
 
 async function getData(west, east, south, north) {
@@ -152,7 +154,7 @@ export function MapComponent() {
                 ) : <></>}
             </div>
             <div>
-                <div style={{"float": "left", "width": "48%", "padding": "10px", "textAlign": "center"}}>
+                <div style={{"float": "left", "width": "48%", "padding": "10px", "textAlign": "center", maxWidth: '90%', margin: '0 auto',}}>
                     <form action="@/app/components/MapComponent" onChange={onChangeCoords}>
                         <label htmlFor="max_lat">Max Latitude</label>
                         <input id={"max_lat"} type="number" step={.05} defaultValue={lat[1]}/><br/>
@@ -175,8 +177,9 @@ export function MapComponent() {
                 <div style={{
                     "float": "right",
                     "width": "48%",
+                    maxWidth: '80%',
+                    margin: '10px auto',
                     "padding": "10px",
-                    margin: "10px",
                     "backgroundColor": "rgb(200,200,200)"
                 }}>
                     <p>Change the minimum and maximum latitude values until you see the range you seek on the map above.
