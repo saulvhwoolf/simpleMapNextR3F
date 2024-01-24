@@ -7,7 +7,7 @@ import * as util from "../../util";
 
 
 export async function GET(request: NextRequest) {
-    util.log("........ checking")
+    util.log("........ checking " + request.url)
 
     const val = getAndValidateCoordinates(request)
     const coords = val[0], err = val[1]

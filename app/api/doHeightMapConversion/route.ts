@@ -163,10 +163,10 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
 
 async function uploadFileToBucket(fileIn, filename) {
     const file = GetBucket().file(filename);
-    const [response] = await file.generateSignedPostPolicyV4({
-        expires: Date.now() + 60 * 60000, //  60 minute,
-        fields: { 'x-goog-meta-test': 'data' },
-    });
+    // const [response] = await file.generateSignedPostPolicyV4({
+    //     expires: Date.now() + 60 * 60000, //  60 minute,
+    //     fields: { 'x-goog-meta-test': 'data' },
+    // });
 
     file.save(fileIn, (err) => {
         if (!err) {
