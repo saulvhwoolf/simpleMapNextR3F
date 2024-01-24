@@ -15,7 +15,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({status: 500, message: err});
     }
 
-    const wireframeUrl = "/wireframe?" + request.url.split("?")[1]
+    if (request.url != undefined) {
+        const wireframeUrl = "/wireframe"
+    } else {
+        const wireframeUrl = "/wireframe?" + request.url.split("?")[1]
+    }
 
     const filepath = "public"
     const filename = generateFilename(coords)
