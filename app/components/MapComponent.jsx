@@ -203,7 +203,7 @@ export function MapComponent() {
                         <br/>
                     </form>
                     <button disabled={!valid} className={(valid || loading) ? styles.enabledButtonStyle : styles.disabledButtonStyle}
-                            onClick={submitCoordinates}> {loading ? "generating... please be patient" : "Generate 3d"}</button>
+                            onClick={submitCoordinates}> {loading ? "generating... please be patient (click again 30s if nothing happens)" : "Generate 3d"}</button>
 
                     <p>Current Area: {Math.round(1000*((long[1]-long[0])*(lat[1]-lat[0])))/1000}</p>
                 </div>
