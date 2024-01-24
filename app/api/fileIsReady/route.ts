@@ -19,15 +19,17 @@ export async function GET(request: NextRequest) {
     const filepath = "public"
     const filename = generateFilename(coords)
     const jpgFilename = filename + ".jpg"
+    // const tifFilename = filename + ".tif"
     const jsonFilename = filename + ".json"
     const jpgPath = filepath + path.sep + jpgFilename
+    // const tifPath = filepath + path.sep + tifFilename
     const jsonPath = filepath + path.sep + jsonFilename
 
     if (fs.existsSync(jpgPath) && fs.existsSync((jsonPath))) {
         console.log("...found download! [" + jpgFilename + ", " + jsonPath + "]")
-        return NextResponse.json({status: 200, "img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
+        return NextResponse.json({status: 200, ready: false, message: "done", "img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
     } else {
-        return NextResponse.json({status: 500, message: "no files"})
+        return NextResponse.json({status: 204, ready: true, message: "still working"})
     }
 }
 

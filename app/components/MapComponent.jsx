@@ -3,7 +3,7 @@
 import React from 'react'
 import {GoogleMap, useJsApiLoader} from '@react-google-maps/api';
 import Link from "next/link";
-import {getHeightMap} from "../util";
+import {doHeightMapConversion, getHeightMap} from "../util";
 import Image from "next/image";
 
 
@@ -11,6 +11,16 @@ const containerStyle = {
     width: '800px',
     height: '500px'
 };
+
+async function getData(west, east, south, north) {
+    let queryString = "east=" + east + "&" + "west=" + west + "&" + "south=" + south + "&" + "north=" + north
+    const res = await fetch("/api/fileIsReady?" + queryString, {
+        cache: "no-cache"
+
+    })
+    return [res.status, await res.json()]
+
+}
 
 export function MapComponent() {
     const {isLoaded} = useJsApiLoader({
@@ -83,18 +93,47 @@ export function MapComponent() {
             console.log("invalid coords")
         }
     }
-    const  submitCoordinates = async () => {
+
+    const checkStatus = (i=0) => {
+        setTimeout(async () => {
+            const [status, jsonResult] = await getData(long[0], long[1], lat[0], lat[1])
+            // console.log(status, jsonResult)
+            if (jsonResult["status"] === 204) {
+                console.log("retrying...("+i+")")
+                if (i < 10) {
+                    checkStatus(i+1)
+                }
+            } else if (jsonResult["status"] === 200) {
+                setUrl(jsonResult["url"])
+                setImageUrl(jsonResult["jpg"])
+                setLoading(false)
+                console.log("done")
+            }
+        }, 3000)
+    }
+
+    const submitCoordinates = async () => {
         setLoading(true)
-        const val = await getHeightMap(long[0], long[1], lat[0], lat[1])
-        setUrl(val["url"])
-        setImageUrl(val["jpg"])
-        setLoading(false)
+        doHeightMapConversion(long[0], long[1], lat[0], lat[1])
+        // console.log(val)
+        // setUrl(val["url"])
+        // setImageUrl(val["jpg"])
+        // setLoading(false)
+        setTimeout(()=>{checkStatus()}, 1000)
     }
 
 
-    const disabledButtonStyle = {"borderRadius":"10px", "border":"thin solid black", "padding": "5px",
-        "margin":"0 auto", "background":"white", "textDecoration": "line-through", "pointerEvents":"None"}
-    const enabledButtonStyle = {"borderRadius":"10px", "border":"thin solid black", "padding": "5px", "margin":"0 auto", "background":"white"}
+    const disabledButtonStyle = {
+        "borderRadius": "10px", "border": "thin solid black", "padding": "5px",
+        "margin": "0 auto", "textDecoration": "line-through", "pointerEvents": "None"
+    }
+    const enabledButtonStyle = {
+        "borderRadius": "10px",
+        "border": "thin solid black",
+        "padding": "5px",
+        "margin": "0 auto",
+        // "background": "white"
+    }
 
 
     return (
@@ -114,25 +153,39 @@ export function MapComponent() {
                 ) : <></>}
             </div>
             <div>
-                <div style={{"float":"left", "width":"48%", "padding": "10px", "textAlign":"center"}}>
+                <div style={{"float": "left", "width": "48%", "padding": "10px", "textAlign": "center"}}>
                     <form action="@/app/components/MapComponent" onChange={onChangeCoords}>
-                            <label htmlFor="min_lat">Min Latitude</label>
-                            <input id={"min_lat"} type="number" step={.05} defaultValue={lat[0]}/><br/>
-                            <label htmlFor="max_lat">Max Latitude</label>
-                            <input id={"max_lat"} type="number" step={.05} defaultValue={lat[1]}/><br/>
-                            <br/>
-                            <label htmlFor="min_long">Min Longitude</label>
-                            <input id={"min_long"} type="number" step={.05} defaultValue={long[0]}/><br/>
-                            <label htmlFor="max_long">Max Longitude</label>
-                            <input id={"max_long"} type="number" step={.05} defaultValue={long[1]}/><br/>
-                            <br/>
+                        <label htmlFor="max_lat">Max Latitude</label>
+                        <input id={"max_lat"} type="number" step={.05} defaultValue={lat[1]}/><br/>
+                        <label htmlFor="min_lat">Min Latitude</label>
+                        <input id={"min_lat"} type="number" step={.05} defaultValue={lat[0]}/><br/>
+                        <br/>
+                        <label htmlFor="max_long">Max Longitude</label>
+                        <input id={"max_long"} type="number" step={.05} defaultValue={long[1]}/><br/>
+                        <label htmlFor="min_long">Min Longitude</label>
+                        <input id={"min_long"} type="number" step={.05} defaultValue={long[0]}/><br/>
+                        <br/>
                     </form>
-                    <button disabled={!valid} style={(valid||loading)?enabledButtonStyle:disabledButtonStyle} onClick={submitCoordinates}> {loading?"generating...":"Generate 3d"}</button>
-                    {url? <Link style={{"display":"block","color": "blue", "textDecoration":"underline"}} href={url}>YOUR MAP</Link>:<></>}
-                    {imageUrl?<img src={imageUrl}></img>:<></>}
+                    <button disabled={!valid} style={(valid || loading) ? enabledButtonStyle : disabledButtonStyle}
+                            onClick={submitCoordinates}> {loading ? "generating..." : "Generate 3d"}</button>
+                    {url ?
+                        <Link style={{"display": "block", "color": "blue", "textDecoration": "underline"}} href={url}>YOUR
+                            MAP</Link> : <></>}
+                    {imageUrl ? <img src={imageUrl}></img> : <></>}
                 </div>
-                <div style={{"float":"right", "width":"48%", "padding": "10px", margin: "10px", "backgroundColor":"rgb(200,200,200)"}}>
-                    <p>Change the minimum and maximum latitude  values until you see the range you seek on the map above. You may need to change zoom level to get a good view</p>
+                <div style={{
+                    "float": "right",
+                    "width": "48%",
+                    "padding": "10px",
+                    margin: "10px",
+                    "backgroundColor": "rgb(200,200,200)"
+                }}>
+                    <p>Change the minimum and maximum latitude values until you see the range you seek on the map above.
+                        You may need to change zoom level to get a good view.</p>
+                    {url ?<Link style={{"display": "block", "color": "blue", "textDecoration": "underline"}} href={url}>YOUR
+                        MAP</Link> : <></>}
+
+
                 </div>
             </div>
         </>
