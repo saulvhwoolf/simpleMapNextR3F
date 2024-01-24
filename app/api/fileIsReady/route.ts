@@ -1,8 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
 
 import path from "path";
-import * as fs from 'fs';
 import {generateFilename} from "../../util";
+import {Storage} from "@google-cloud/storage";
 
 
 export async function GET(request: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     const val = getAndValidateCoordinates(request)
     const coords = val[0], err = val[1]
-    console.log(coords, err)
+    // console.log(coords, err)
     if (err != null) {
         return NextResponse.json({status: 500, message: err});
     }
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // const tifPath = filepath + path.sep + tifFilename
     const jsonPath = filepath + path.sep + jsonFilename
 
-    if (fs.existsSync(jpgPath) && fs.existsSync((jsonPath))) {
+    if (await bucketHasFile(jpgPath) && await bucketHasFile(jsonPath)) {
         console.log("...found download! [" + jpgFilename + ", " + jsonPath + "]")
         return NextResponse.json({status: 200, ready: false, message: "done", "img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
     } else {
@@ -71,8 +71,24 @@ function isValidLatitude(lat) {
     return !isNaN(lat) && ((-180 < lat) && (lat < 180))
 }
 
-
-
 // ********   FILES  **********
 
+
+async function bucketHasFile(filename) {
+    const res = await GetBucket().file(filename).exists()
+    // console.log(filename, res[0], res)
+    return res[0]
+}
+
+function GetBucket(){
+    const storage = new Storage({
+        projectId: process.env.PROJECT_ID,
+        credentials: {
+            client_email: process.env.CLIENT_EMAIL,
+            private_key: process.env.PRIVATE_KEY.split(String.raw`\n`).join('\n'),
+        },
+    });
+
+    return storage.bucket(process.env.BUCKET_NAME)
+}
 

@@ -1,9 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 
 import path from "path";
-import * as fs from 'fs';
 import {generateFilename} from "../../util";
-
 
 export async function GET(request: NextRequest) {
     console.log("... checking")
@@ -17,19 +15,24 @@ export async function GET(request: NextRequest) {
 
     const wireframeUrl = "/wireframe?" + request.url.split("?")[1]
 
-    const filepath = "public"
     const filename = generateFilename(coords)
+
     const jpgFilename = filename + ".jpg"
     const jsonFilename = filename + ".json"
+
+    const filepath = "public"
     const jpgPath = filepath + path.sep + jpgFilename
     const jsonPath = filepath + path.sep + jsonFilename
 
-    if (fs.existsSync(jpgPath) && fs.existsSync((jsonPath))) {
-        console.log("...found download! [" + jpgFilename + ", " + jsonPath + "]")
-        return NextResponse.json({status: 200, "img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
-    } else {
-        return NextResponse.json({status: 500, message: "no files"})
-    }
+    const bucketPath = "https://storage.googleapis.com/ele-map-collection/public"
+    const jpgBucketPath = bucketPath + "/" + jpgFilename
+    const jsonBucketPath = bucketPath + "/" + jsonFilename
+
+    const publicPath = "api/fromBucket"
+    const jpgPublicPath = publicPath + "?file=public/" + jpgFilename
+    const jsonPublicPath = publicPath + "?file=public/" + jsonFilename
+
+    return NextResponse.json({status: 200, ready: false, message: "done", "img": jpgPublicPath, "json": jsonPublicPath, "url":wireframeUrl})
 }
 
 function getAndValidateCoordinates(request) {
@@ -73,3 +76,21 @@ function isValidLatitude(lat) {
 
 // ********   FILES  **********
 
+//
+// async function bucketHasFile(filename) {
+//     const res = await GetBucket().file(filename).exists()
+//     // console.log(filename, res[0], res)
+//     return res[0]
+// }
+//
+// function GetBucket(){
+//     const storage = new Storage({
+//         projectId: process.env.PROJECT_ID,
+//         credentials: {
+//             client_email: process.env.CLIENT_EMAIL,
+//             private_key: process.env.PRIVATE_KEY.split(String.raw`\n`).join('\n'),
+//         },
+//     });
+//
+//     return storage.bucket(process.env.BUCKET_NAME)
+// }

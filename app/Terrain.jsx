@@ -4,8 +4,9 @@ import * as THREE from "three";
 import {Plane} from "@react-three/drei";
 
 
-export const Terrain = ({data, heightRange, dimensions}) => {
-    const height = useLoader(THREE.TextureLoader, data);
+export const Terrain = ({heightMapUrl, heightRange, dimensions}) => {
+    // console.log("hm", heightMapUrl)
+    const height = useLoader(THREE.TextureLoader, heightMapUrl);
     const dimRatio = getDimensionRatio(dimensions)
     const veriticalScale = (heightRange[1]-heightRange[0])/512
     return (

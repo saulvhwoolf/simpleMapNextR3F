@@ -21,6 +21,7 @@ export function Map3dComponent() {
         if (heightMapUrl == null) {
             util.getHeightMap(west, east, south, north).then(async (hm) => {
                 const res = await fetch(hm["json"])
+                console.log(hm["img"], hm["json"])
                 const vals = await res.json()
                 setHeightMapUrl(hm["img"])
                 setDimensions([parseFloat(vals["WIDTH"]), parseFloat(vals["HEIGHT"])])
@@ -46,7 +47,7 @@ export function Map3dComponent() {
                             <pointLight intensity={4} position={[7, 500, 100]}/>
                             <Sky sunPosition={[7, 5, 1]}/>
                             <Suspense fallback={null}>
-                                <Terrain data={heightMapUrl} heightRange={heightRange} dimensions={dimensions} />
+                                <Terrain heightMapUrl={heightMapUrl} heightRange={heightRange} dimensions={dimensions} />
                             </Suspense>
                         </Canvas>
                     </div>

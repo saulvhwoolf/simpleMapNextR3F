@@ -1,12 +1,10 @@
 import {NextRequest, NextResponse} from "next/server";
 
-import path from "path";
-import * as fs from 'fs';
-import {generateFilename} from "../../util";
+import {generateFilename, timeout} from "../../util";
 
-import axios from "axios";
-import {fromArrayBuffer} from "geotiff";
+import {fromUrl} from "geotiff";
 import * as jpeg from "jpeg-js";
+import {Storage} from "@google-cloud/storage";
 
 
 export async function GET(request: NextRequest) {
@@ -25,32 +23,41 @@ export async function GET(request: NextRequest) {
 
     const url = generateQueryUrl(coords)
     console.log("... URL: "+ url)
+    // const filepath = "heightMap_e83.95_w83.55_s28.55_n28.65.tif\n"
     const filepath = "public"
     const filename = generateFilename(coords)
     const jpgFilename = filename + ".jpg"
     const tifFilename = filename + ".tif"
     const jsonFilename = filename + ".json"
-    const jpgPath = filepath + path.sep + jpgFilename
-    const tifPath = filepath + path.sep + tifFilename
-    const jsonPath = filepath + path.sep + jsonFilename
+    const jpgPath = filepath + "/" + jpgFilename
+    const tifPath = filepath + "/" + tifFilename
+    const jsonPath = filepath + "/" + jsonFilename
 
-    if (fs.existsSync(jpgPath) && fs.existsSync((jsonPath))) {
+    const publicpath = "https://storage.googleapis.com/ele-map-collection/public"
+    const jpgPublicPath = publicpath + "/" + jpgFilename
+    const tifPublicPath = publicpath + "/" + tifFilename
+    const jsonPublicPath = publicpath + "/" + jsonFilename
+
+
+    if (await bucketHasFile(jpgPath) && await bucketHasFile(jsonPath)) {
+    // if (fs.js.existsSync(jpgPath) && fs.js.existsSync((jsonPath))) {
         console.log("Already Downloaded [" + jpgFilename + "] -- sending response")
-        return NextResponse.json({"img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
+        return NextResponse.json({"img": jpgPublicPath, "json": jsonPublicPath, "url":wireframeUrl})
     }
 
-    if (fs.existsSync(tifPath)) {
+    if (await bucketHasFile(jpgPath)) {
         console.log("Already Downloaded [" + tifFilename + "] ...")
     } else {
-        console.log("Downloading [" + tifFilename + "] ...")
+        console.log("Downloading and Converting [" + tifFilename + "] ...")
         console.log("... "+url)
-        await downloadTif(url, tifPath)
+        await downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath)
     }
 
-    console.log("Converting to Jpg [" + tifFilename + "] ...")
-    await convertTifToJpgAndJson(tifPath, jpgPath, jsonPath)
+    // console.log("Converting to Jpg [" + tifFilename + "] ...")
+    // console.log("... " + tifPublicPath)
+    // await convertTifToJpgAndJson(tifPublicPath, jpgPath, jsonPath)
 
-    return NextResponse.json({"img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
+    return NextResponse.json({"img": jpgPublicPath, "json": jsonPublicPath, "url":wireframeUrl})
     // return NextResponse.json({status:200, message: "starting conversion"})
 }
 
@@ -106,7 +113,7 @@ function generateQueryUrl(coords) {
     const queryString2 = [ "south","north", "west", "east"].map((v) => {
         return v + "=" + coords[v]
     }).join("&")
-    const queryString3 = "outputFormat=GTiff&API_Key=2c66270018613ef769655d9c553de8ba"
+    const queryString3 = "outputFormat=GTiff&API_Key="+process.env.TOPO_API_KEY
 
     return url + "?" + queryString1 + "&" + queryString2 + "&" + queryString3
 
@@ -114,58 +121,99 @@ function generateQueryUrl(coords) {
 
 // ********   FILES  **********
 
+async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath) {
+    await fetch(url, {}).then(async (res) => {
+        console.log("[] downloading to bucket")
+        await uploadFileToBucket(res.body, tifPath)
 
+        console.log("[] load from bucket", tifPublicPath)
+        // const tiff2 = await fromUrl("https://storage.googleapis.com/ele-map-collection/public/heightMap_e83.95_w83.55_s28.55_n28.65.tif");
+        const tiff2 = await fromUrl(tifPublicPath);
+        console.log("[] loaded, converting")
 
-async function downloadTif(url, filename) {
-    const axRes = await axios.get(url, {responseType: 'arraybuffer'})
-    await fs.promises.writeFile(filename, axRes.data)
+        const image = await tiff2.getImage(), raster = await image.readRasters();
+        const width = image.getWidth(), height = image.getHeight();
+
+        // Assuming a greyscale image for simplicity; adjust for other types
+        const rgbaBuffer = new Uint8Array(width * height * 4);
+        let min = null, max = null
+        for (let i = 0; i < width * height; i++) {
+            let val = raster[0][i]
+            if (min == null || min > val)
+                min = val
+            if (max == null || max < val)
+                max = val
+        }
+        // console.log("... Min Height:" + min + " and Max Height " + max)
+
+        // console.log("... Scaling Down ...")
+        for (let i = 0; i < width * height; i++) {
+            let val = scale(raster[0][i], min, max, 255)
+            rgbaBuffer[i * 4] = val;     // Red
+            rgbaBuffer[i * 4 + 1] = val; // Green
+            rgbaBuffer[i * 4 + 2] = val; // Blue
+            rgbaBuffer[i * 4 + 3] = 255; // Alpha
+        }
+
+        // Encode as JPEG
+        const jpegImageData = {
+            data: rgbaBuffer,
+            width: width,
+            height: height
+        };
+        const jpegBuffer = jpeg.encode(jpegImageData, 90).data; // 90 is the quality
+
+        console.log("... Saving Jpg ...")
+        await uploadFileToBucket(jpegBuffer, jpgPath);
+        // await fs.js.promises.writeFile(jpgPath, jpegBuffer, {});
+
+        console.log("... Saving Json ...")
+        await uploadFileToBucket(JSON.stringify({
+            "MIN": min, "MAX": max,
+            "WIDTH": width, "HEIGHT": height
+        }), jsonPath);
+        console.log("... DONE ...")
+    })
+
 }
 
-async function convertTifToJpgAndJson(tifPath, jpgPath, jsonPath) {
-    console.log("... Load and Raster...")
-    const tiffData = fs.readFileSync(tifPath);
-    const arrayBuffer = tiffData.buffer.slice(tiffData.byteOffset, tiffData.byteOffset + tiffData.byteLength);
-    const tiff = await fromArrayBuffer(arrayBuffer);
 
-    const image = await tiff.getImage(), raster = await image.readRasters();
-    const width = image.getWidth(), height = image.getHeight();
+async function uploadFileToBucket(fileIn, filename) {
+    const file = GetBucket().file(filename);
+    file.save(fileIn, (err) => {
+        if (!err) {
+            console.log(".. upload successful");
+        } else {
+            console.log("error " + err);
+        }
+    });
+    await timeout(8000)
 
-    // Assuming a greyscale image for simplicity; adjust for other types
-    const rgbaBuffer = new Uint8Array(width * height * 4);
-    let min = null, max = null
-    for (let i = 0; i < width * height; i++) {
-        let val = raster[0][i]
-        if (min == null || min > val)
-            min = val
-        if (max == null || max < val)
-            max = val
-    }
-    console.log("... Min Height:" + min + " and Max Height " + max)
+    const [response] = await file.generateSignedPostPolicyV4({
+        expires: Date.now() + 60 * 1000, //  1 minute,
+        fields: { 'x-goog-meta-test': 'data' },
+        // public
+    });
+    const ifExist = (await file.exists())[0]; // (await brackets) needed
+    console.log("[] done uploading!")
+    return ifExist
+}
 
 
-    console.log("... Scaling Down ...")
-    for (let i = 0; i < width * height; i++) {
-        let val = scale(raster[0][i], min, max, 255)
-        rgbaBuffer[i * 4] = val;     // Red
-        rgbaBuffer[i * 4 + 1] = val; // Green
-        rgbaBuffer[i * 4 + 2] = val; // Blue
-        rgbaBuffer[i * 4 + 3] = 255; // Alpha
-    }
+async function bucketHasFile(filename) {
+    const res = await GetBucket().file(filename).exists()
+    // console.log(filename, res[0], res)
+    return res[0]
+}
 
-    // Encode as JPEG
-    const jpegImageData = {
-        data: rgbaBuffer,
-        width: width,
-        height: height
-    };
-    const jpegBuffer = jpeg.encode(jpegImageData, 90).data; // 90 is the quality
+function GetBucket(){
+    const storage = new Storage({
+        projectId: process.env.PROJECT_ID,
+        credentials: {
+            client_email: process.env.CLIENT_EMAIL,
+            private_key: process.env.PRIVATE_KEY.split(String.raw`\n`).join('\n'),
+        },
+    });
 
-    console.log("... Saving Jpg ...")
-    await fs.promises.writeFile(jpgPath, jpegBuffer, {});
-
-    console.log("... Saving Json ...")
-    await fs.promises.writeFile(jsonPath, JSON.stringify({
-        "MIN": min, "MAX": max,
-        "WIDTH": width, "HEIGHT": height
-    }), {});
+    return storage.bucket(process.env.BUCKET_NAME)
 }

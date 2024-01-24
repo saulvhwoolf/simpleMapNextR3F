@@ -1,6 +1,4 @@
 
-
-
 export async function getHeightMap(west=0, east=0, south=0, north=0) {
     const API_URL = "/api/getHeightMap"
     // let queryString = API_DATA.map((arr)=>{return arr[0] + "=" + arr[1]}).join("&")
@@ -33,3 +31,7 @@ export function generateFilename(coords) {
 }
 
 
+
+export function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
