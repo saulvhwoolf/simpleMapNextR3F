@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({status: 500, message: err});
     }
 
-    let wireframeUrl = "/wireframe"
+    let wireframeUrl = "/wireframe?"
     if (request.url != undefined) {
         wireframeUrl += request.url.split("?")[1]
     }
