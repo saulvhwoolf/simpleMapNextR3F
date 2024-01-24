@@ -180,6 +180,7 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
 
 async function uploadFileToBucket(fileIn, filename) {
     const file = GetBucket().file(filename);
+    console.log("attempting to save")
     file.save(fileIn, (err) => {
         if (!err) {
             console.log(".. upload successful");
@@ -187,13 +188,13 @@ async function uploadFileToBucket(fileIn, filename) {
             console.log("error " + err);
         }
     });
-    await timeout(8000)
+    // await timeout(5000)
 
-    const [response] = await file.generateSignedPostPolicyV4({
-        expires: Date.now() + 60 * 1000, //  1 minute,
-        fields: { 'x-goog-meta-test': 'data' },
-        // public
-    });
+    // const [response] = await file.generateSignedPostPolicyV4({
+    //     expires: Date.now() + 60 * 1000, //  1 minute,
+    //     fields: { 'x-goog-meta-test': 'data' },
+    // });
+
     const ifExist = (await file.exists())[0]; // (await brackets) needed
     console.log("[] done uploading!")
     return ifExist
