@@ -1,9 +1,4 @@
 
 {
-  "functions": {
-    "api/getHeightMap.js": {
-      "memory": 3008,
-      "maxDuration": 30
-    }
-  }
+
 }
