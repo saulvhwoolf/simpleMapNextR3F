@@ -182,7 +182,7 @@ async function uploadFileToBucket(fileIn, filename) {
     const file = GetBucket().file(filename);
     console.log("attempting to save")
     const [response] = await file.generateSignedPostPolicyV4({
-        expires: Date.now() + 60 * 1000, //  1 minute,
+        expires: Date.now() + 60 * 60000, //  60 minute,
         fields: { 'x-goog-meta-test': 'data' },
     });
 
