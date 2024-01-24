@@ -9,22 +9,32 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.7.0",
     "@react-google-maps/api": "^2.19.2",
     "@react-three/drei": "^9.78.2",
     "@react-three/fiber": "^8.13.5",
     "@react-three/postprocessing": "^2.15.0",
+    "@vercel/blob": "^0.19.0",
     "axios": "^1.6.5",
     "geotiff": "^2.1.1",
     "jpeg-js": "^0.4.4",
+    "net": "^1.0.2",
     "next": "^14.0.4",
     "react": "^18.2.0",
     "three": "^0.160.0",
     "tiff": "^5.0.3",
     "tiff.js": "^1.0.0",
-    "utif": "^3.1.0"
+    "tls": "^0.0.1",
+    "utif": "^3.1.0",
+    "vercel": "^33.2.0"
   },
   "devDependencies": {
     "@types/node": "20.11.0",
     "typescript": "5.3.3"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
   }
 }
