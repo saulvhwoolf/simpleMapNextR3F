@@ -1,7 +1,7 @@
 
 {
   "functions": {
-    "api/doHeightMapConversion*": {
+    "api/doHeightMapConversion": {
       "memory": 3008,
       "maxDuration": 60
     }
