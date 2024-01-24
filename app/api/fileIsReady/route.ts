@@ -84,6 +84,7 @@ async function bucketHasFile(filename) {
 }
 
 function GetBucket(){
+    console.log(process.env.PRIVATE_KEY.split(String.raw`\n`).join('\n'))
     const storage = new Storage({
         projectId: process.env.PROJECT_ID,
         credentials: {
