@@ -2,23 +2,23 @@
 import React, {Suspense, useEffect, useState} from "react";
 import {Canvas} from "@react-three/fiber";
 import {Terrain} from "../Terrain";
-import {FlyControls, MapControls, OrbitControls, Sky} from "@react-three/drei";
-import {useRouter, useSearchParams} from "next/navigation";
+import {OrbitControls, Sky} from "@react-three/drei";
+import {useSearchParams} from "next/navigation";
 import {getHeightMap} from "../util";
+import * as styles from "./Map3dComponent.module.css"
+
 
 export function Map3dComponent() {
     const [heightMapUrl, setHeightMapUrl] = React.useState(null)
     const [textureUrl, setTextureUrl] = React.useState(null)
     const [heightRange, setHeightRange] = React.useState(null)
     const [dimensions, setDimensions] = React.useState(null)
-    const [showWireframe, setShowWireframe] = React.useState(true)
+    const [showWireframe, setShowWireframe] = React.useState(false)
 
 
     const searchParams = useSearchParams()
-    const east = searchParams.get('east')
-    const west = searchParams.get('west')
-    const south = searchParams.get('south')
-    const north = searchParams.get('north')
+    const east = searchParams.get('east'), west = searchParams.get('west'),
+        south = searchParams.get('south'), north = searchParams.get('north')
 
     const toggleWireframeVisibility = () => {
         setShowWireframe(!showWireframe)
@@ -28,7 +28,6 @@ export function Map3dComponent() {
         if (heightMapUrl == null) {
             getHeightMap(west, east, south, north).then(async (hm) => {
                 const res = await fetch(hm["json"])
-                console.log(hm["img"], hm["json"])
                 const vals = await res.json()
                 setHeightMapUrl(hm["img"])
                 setTextureUrl(hm["png"])
@@ -37,36 +36,33 @@ export function Map3dComponent() {
             })
         }
     }, [])
-    let i = 0;
 
     return (
         <>
-
             {heightMapUrl && heightRange && dimensions?
                 <>
                     <button onClick={toggleWireframeVisibility}>Toggle Wireframe {showWireframe?"Off":"On"}</button>
-                    <div className={"cellContainer"}>
+                    <div className={styles.cellContainer}>
                         <Canvas camera={{position: [10, 30, 40] }}>
                             <fog attach="fog" args={["white", 10, 130]} />
                             <OrbitControls autoRotate={true} autoRotateSpeed={1}/>
-
-
                             <ambientLight/>
                             <pointLight intensity={4} position={[7, 500, 100]}/>
                             <Sky sunPosition={[7, 5, 1]}/>
                             <Suspense fallback={null}>
-                                <Terrain showWireFrame={showWireframe} heightMapUrl={heightMapUrl} textureUrl={textureUrl} heightRange={heightRange} dimensions={dimensions} />
+                                <Terrain showWireFrame={showWireframe} heightMapUrl={heightMapUrl}
+                                         textureUrl={textureUrl} heightRange={heightRange} dimensions={dimensions} />
                             </Suspense>
 
                         </Canvas>
                     </div>
-                    {dimensions?<img src={heightMapUrl} width={dimensions[0]} height={dimensions[1]} alt={"black and white height map"}></img>:<></>}
-
+                    {dimensions?
+                        <img src={heightMapUrl} width={dimensions[0]} height={dimensions[1]}
+                             alt={"black and white height map"}></img>
+                        :<></>}
                 </>
                 :
-                <>
-                    <p>LOADING</p>
-                </>
+                <><p>LOADING</p></>
             }
         </>
     );

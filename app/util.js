@@ -46,7 +46,7 @@ export function log(message) {
 }
 
 
-export function getBoundsZoomLevel(minLat, maxLat, minLong, maxLong, mapDim) {
+export function getBoundsZoomLevel(minLong, maxLong, minLat, maxLat, mapDim) {
     var WORLD_DIM = {height: 256, width: 256};
     var ZOOM_MAX = 15;
 
@@ -68,12 +68,14 @@ export function getBoundsZoomLevel(minLat, maxLat, minLong, maxLong, mapDim) {
     const latZoom = zoom(mapDim.height, WORLD_DIM.height, latFraction);
     const lngZoom = zoom(mapDim.width, WORLD_DIM.width, lngFraction);
 
-    const values = [latZoom, lngZoom, ].filter((v) => {return !Number.isNaN(v);})
+    const values = [latZoom, lngZoom,].filter((v) => {
+        return !Number.isNaN(v);
+    })
     return Math.min(Math.min.apply(Math, values), ZOOM_MAX);
 }
 
 
-const _C = { x: 128, y: 128 };
+const _C = {x: 128, y: 128};
 const _J = 256 / 360;
 const _L = 256 / (2 * Math.PI);
 
@@ -95,22 +97,52 @@ function latlonToPt(ll) {
     let a = bounds(Math.sin(sb(ll[0])), -(1 - 1E-15), 1 - 1E-15);
     return {
         x: _C.x + ll[1] * _J,
-        y: _C.y + 0.5 * Math.log((1 + a) / (1 - a)) * - _L
+        y: _C.y + 0.5 * Math.log((1 + a) / (1 - a)) * -_L
     }
 }
 
 function ptToLatlon(pt) {
-    return [tb(2 * Math.atan(Math.exp((pt.y - _C.y) / -_L)) - Math.PI / 2),(pt.x - _C.x) / _J]
+    return [tb(2 * Math.atan(Math.exp((pt.y - _C.y) / -_L)) - Math.PI / 2), (pt.x - _C.x) / _J]
 }
 
 
 export function calculateBoundingBox(ll, zoom, sizeX, sizeY) {
     const cp = latlonToPt(ll);
     // console.log("..........", ll, zoom, sizeX, sizeY)
-    const pixelSize = Math.pow(2, -(zoom));
-    const pwX = sizeX*pixelSize;
-    const pwY = sizeY*pixelSize;
+    const pixelSize = Math.pow(2, -(zoom + 1));
+    const pwX = sizeX * pixelSize;
+    const pwY = sizeY * pixelSize;
 
     const ne = ptToLatlon({x: cp.x + pwX, y: cp.y - pwY}), sw = ptToLatlon({x: cp.x - pwX, y: cp.y + pwY})
     return [sw[0], ne[0], sw[1], ne[1]]
+}
+
+
+// takes in lnglat for coords, and xy for dimensions
+export function getProportionalDimensions(innerCoords, outerCoords, outerDimensions) {
+    const innerCoordWidth = innerCoords[1] - innerCoords[0],
+        innerCoordHeight = innerCoords[3] - innerCoords[2],
+        outerCoordWidth = outerCoords[1] - outerCoords[0],
+        outerCoordHeight = outerCoords[3] - outerCoords[2]
+
+    const innerWidth = outerDimensions[0] * (innerCoordWidth / outerCoordWidth),
+        innerHeight = outerDimensions[1] * (innerCoordHeight / outerCoordHeight)
+
+    return [Math.floor(innerWidth), Math.floor(innerHeight)]
+}
+
+
+export function getTextureUrlFromLatLngBounds(lnglat) {
+    const center = [(lnglat[1] + lnglat[0]) / 2,(lnglat[3] + lnglat[2]) / 2]
+    const zoom = getBoundsZoomLevel(...lnglat, {width: 640, height: 640})
+    const realBoundingBox = calculateBoundingBox(center, zoom, 640, 640)
+    const innerDimensions = getProportionalDimensions(lnglat, realBoundingBox, [640, 640])
+
+    return "https://maps.googleapis.com/maps/api/staticmap?center="
+        + center[0] + "," + center[1] + "&zoom=" + zoom
+        + "&size=" + innerDimensions[1] + "x" + innerDimensions[0]
+        +"&maptype=satellite&key="
+        + "AIzaSyBcLq6JvBbvaXx9x7EsgKaw9p4_hyBbVRw"
+    // + process.env.GMAPS_API_KEY
+
 }

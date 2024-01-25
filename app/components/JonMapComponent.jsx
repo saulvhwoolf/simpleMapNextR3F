@@ -2,6 +2,8 @@
 
 import React from 'react'
 import {GoogleMap, useJsApiLoader} from '@react-google-maps/api';
+import * as util from "../util";
+import {getProportionalDimensions, getTextureUrlFromLatLngBounds} from "../util";
 
 
 const containerStyle = {
@@ -18,13 +20,11 @@ export function JonMapComponent() {
         googleMapsApiKey: "AIzaSyB9uKKAGJxnNgquq3f3UOvxDkHWRYgjqrk"
     })
 
-    const [valid, setValid] = React.useState(false)
-    const [loading, setLoading] = React.useState(false)
     const [map, setMap] = React.useState(null)
-    const [url, setUrl] = React.useState(null)
-    const [imageUrl, setImageUrl] = React.useState(null)
     const [lat, setLat] = React.useState([28.55, 28.65])
     const [long, setLong] = React.useState([83.85, 83.95])
+
+    const [targetUrl, setTargetUrl] = React.useState(null)
 
     const [selectionPolygon, setSelectionPolygon] = React.useState(null)
 
@@ -46,20 +46,39 @@ export function JonMapComponent() {
     }, [])
 
 
-    React.useEffect(()=> {
+    const lnglat = [37.8, 38.2, -119.3, -118.85,]
+    // const lnglat = [44, 44.07, -70.55, -70.5,]
+    // const lnglat = [37.560546874999986,
+    //     38.439453124999986,
+    //     -61.13783937849957,
+    //     -60.71072909141721
+    // ]
+
+    const textureUrl = getTextureUrlFromLatLngBounds(lnglat)
+    // const center = [(lnglat[1] + lnglat[0]) / 2,(lnglat[3] + lnglat[2]) / 2]
+    const zoom = util.getBoundsZoomLevel(...lnglat, {width: 640, height: 640})
+    // const realBoundingBox = util.calculateBoundingBox(center, zoom, 640, 640)
+
+    React.useEffect(() => {
         if (map != null) {
 
-            const p1 = makePoly( -119.3, -118.85, 37.8, 38.2 , false)
+            const p1 = makePoly(lnglat[2], lnglat[3], lnglat[0], lnglat[1], false)
             p1.setMap(map)
 
-            // const p2 = makePoly(  -61.13783937849957,
-            //     -60.71072909141721,
-            //     37.560546874999986,
-            //     38.439453124999986
-            //
-            //     , true)
+            // const p2 = makePoly(realBoundingBox[2], realBoundingBox[3], realBoundingBox[0], realBoundingBox[1], true)
             // p2.setMap(map)
 
+            const bounds = new google.maps.LatLngBounds();
+            p1.getPaths().forEach(function(path) {
+                path.forEach(function(coord) {
+                    bounds.extend(coord);
+                });
+            });
+
+            map.fitBounds(bounds)
+            map.setZoom(zoom)
+
+            setTargetUrl(textureUrl)
         }
     }, [map])
 
@@ -68,10 +87,12 @@ export function JonMapComponent() {
             <div>
                 {isLoaded ? (
                     <GoogleMap id={"map"} mapContainerStyle={containerStyle} zoom={8} onLoad={onLoad}
-                               onUnmount={onUnmount} bootstrapURLKeys={{key: process.env.REACT_APP_MAP_KEY, v: '3.30',}}>
+                               onUnmount={onUnmount}
+                               bootstrapURLKeys={{key: process.env.REACT_APP_MAP_KEY, v: '3.30',}}>
                         <></>
                     </GoogleMap>
                 ) : <></>}
+                {targetUrl? <a href={targetUrl}>{targetUrl}</a>:<></>}
             </div>
         </>
 
@@ -79,16 +100,18 @@ export function JonMapComponent() {
 }
 
 
-function makePoly( long1, long2, lat1, lat2, other) {
+function makePoly(long1, long2, lat1, lat2, other) {
     // Define the LatLng coordinates for the polygon's path.
     const pathCoords = [{lat: lat1, lng: long1}, {lat: lat2, lng: long1},
         {lat: lat2, lng: long2}, {lat: lat1, lng: long2}, {lat: lat1, lng: long1}];
-    return new google.maps.Polygon({
+    let p  = new google.maps.Polygon({
         paths: pathCoords,
         strokeColor: "#FF0000",
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillColor: other?"#FF0000":"#00FF00",
+        fillColor: other ? "#FF0000" : "#00FF00",
         fillOpacity: 0.35,
     });
+
+    return p
 }

@@ -1,0 +1,21 @@
+
+
+
+.cell {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    /*background-color: black;*/
+    /*border:thin solid white;*/
+    margin-right: 1px;
+}
+
+.cellContainer {
+    /*margin: 20px;*/
+    line-height: 3px;
+    background: rgb(50 50 50);
+    max-width: 80vw;
+
+    width: 800px;
+    height: 800px;
+}
