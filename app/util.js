@@ -142,7 +142,6 @@ export function getTextureUrlFromLatLngBounds(lnglat) {
         + center[0] + "," + center[1] + "&zoom=" + zoom
         + "&size=" + innerDimensions[1] + "x" + innerDimensions[0]
         +"&maptype=satellite&key="
-        + "AIzaSyBcLq6JvBbvaXx9x7EsgKaw9p4_hyBbVRw"
-    // + process.env.GMAPS_API_KEY
+    + process.env.GMAPS_API_KEY
 
 }

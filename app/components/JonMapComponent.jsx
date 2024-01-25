@@ -54,7 +54,7 @@ export function JonMapComponent() {
     //     -60.71072909141721
     // ]
 
-    const textureUrl = getTextureUrlFromLatLngBounds(lnglat)
+    // const textureUrl = getTextureUrlFromLatLngBounds(lnglat)
     // const center = [(lnglat[1] + lnglat[0]) / 2,(lnglat[3] + lnglat[2]) / 2]
     const zoom = util.getBoundsZoomLevel(...lnglat, {width: 640, height: 640})
     // const realBoundingBox = util.calculateBoundingBox(center, zoom, 640, 640)
@@ -78,7 +78,7 @@ export function JonMapComponent() {
             map.fitBounds(bounds)
             map.setZoom(zoom)
 
-            setTargetUrl(textureUrl)
+            // setTargetUrl(textureUrl)
         }
     }, [map])
 
