@@ -3,9 +3,9 @@
   "functions": {
     "app/api/doHeightMapConversion": {
       "memory": 3008,
-      "maxDuration": 60
+      "maxDuration": 59
     },
-    "api/*.js": {
+    "app/api/**/*.js": {
       "memory": 3008,
       "maxDuration": 60
     }
