@@ -5,7 +5,7 @@
       "memory": 3008,
       "maxDuration": 60
     },
-    "app/api/*": {
+    "api/*.js": {
       "memory": 3008,
       "maxDuration": 60
     }
