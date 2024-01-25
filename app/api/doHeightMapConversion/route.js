@@ -6,7 +6,6 @@ import {fromArrayBuffer, fromBlob, fromUrl} from "geotiff";
 import * as jpeg from "jpeg-js";
 import {Storage} from "@google-cloud/storage";
 import * as util from "../../util";
-import * as sharp from "sharp"
 
 export async function GET(request) {
     util.log("HANDLING... " + request.url)
