@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 
-import {calculateBoundingBox, generateFilename, timeout} from "../../util";
+import {calculateBoundingBox, generateFilename, getBoundsZoomLevel, timeout} from "../../util";
 
 import {fromArrayBuffer, fromBlob, fromUrl} from "geotiff";
 import * as jpeg from "jpeg-js";
@@ -23,8 +23,18 @@ export async function GET(request) {
 
     const centerCoords = [(Math.round(1000000 * (coords["west"] + (coords["east"] - coords["west"]) / 2)) / 1000000),
         (Math.round(1000000 * (coords["south"] + (coords["north"] - coords["south"]) / 2)) / 1000000)]
-    const dims = getDimensions(coords["east"] - coords["west"], coords["north"] - coords["south"])
-    const dimString = dims[0] + "x" + dims[1]
+    // const dims = getDimensions(coords["east"] - coords["west"], coords["north"] - coords["south"])
+    const raw_dims = [640, 640]
+
+
+    console.log("ZOOM", zoom, util.getBoundsZoomLevel(coords["south"], coords["north"], coords["west"], coords["east"],
+        {width: 640, height: 640}))
+    const realBoundingBox = util.calculateBoundingBox(centerCoords, zoom, raw_dims[0], raw_dims[1])
+    const myBoundingBox = [coords["west"], coords["east"], coords["south"], coords["north"]]
+
+    const requestDim = getDimensions(myBoundingBox, realBoundingBox, raw_dims)
+    console.log("REQUEST DIMENSIONS" + requestDim)
+    const dimString = requestDim[0] + "x" + requestDim[1]
 
     const textureQueryUrl = "https://maps.googleapis.com/maps/api/staticmap?center=" + centerCoords[1] + "," + centerCoords[0] + "&zoom=" + zoom + "&size=" + dimString + "&maptype=satellite&key=" + process.env.GMAPS_API_KEY
     util.log("... API TEXTURE URL: " + textureQueryUrl)
@@ -53,11 +63,7 @@ export async function GET(request) {
         util.log("... DOWNLOADING AND CONVERTING [" + tifFilename + "] ...")
         await downloadTifJpgJson(apiQueryUrl, tifPath, tifPublicPath, jpgPath, jsonPath)
 
-        console.log("DIM", dims)
-        const realBoundingBox = util.calculateBoundingBox(centerCoords, zoom, dims[0], dims[1])
-        console.log("BB", realBoundingBox)
-        const myBoundingBox = [coords["west"], coords["east"], coords["south"], coords["north"]]
-        await downloadTexture(textureQueryUrl, pngPath, myBoundingBox, realBoundingBox, dims)
+        await downloadTexture(textureQueryUrl, pngPath, myBoundingBox, realBoundingBox, raw_dims)
     }
 
     return NextResponse.json({"img": jpgPublicPath, "json": jsonPublicPath, "url": wireframeUrl})
@@ -119,56 +125,15 @@ function generateQueryUrl(coords) {
 
 // ********   FILES  **********
 
-async function downloadTexture(textureUrl, texturePath, neededCoords, retrievedCoords, retrievedDimensions) {
+async function downloadTexture(textureUrl, texturePath) {
     await fetch(textureUrl, {}).then(async (res) => {
-        console.log(retrievedDimensions)
-        console.log(neededCoords, retrievedCoords)
-
-        const trueLat = neededCoords[1] - neededCoords[0],
-            trueLng = neededCoords[3] - neededCoords[2]
-
-        const latD1 = Math.abs(neededCoords[0] - retrievedCoords[0]),
-            latD2 = Math.abs(retrievedCoords[1] - neededCoords[1])
-
-        const lngD1 = Math.abs(neededCoords[2] - retrievedCoords[2]),
-            lngD2 = Math.abs(retrievedCoords[3] - neededCoords[3])
-
-        const topOffset = Math.floor(retrievedDimensions[1] * (latD1 / (latD1 + trueLat + latD2))),
-            bottomOffset = Math.floor(retrievedDimensions[1] * (latD2 / (latD1 + trueLat + latD2))),
-            leftOffset = Math.floor(retrievedDimensions[0] * (lngD1 / (lngD1 + trueLng + lngD2))),
-            rightOffset = Math.floor(retrievedDimensions[0] * (lngD2 / (lngD1 + trueLng + lngD2)))
-
-        const seekHeight = retrievedDimensions[1] - topOffset - bottomOffset
-        const seekWidth = retrievedDimensions[0] - leftOffset - rightOffset
-
-        console.log("...... remove from left and right", lngD1, trueLng, lngD2, leftOffset, seekWidth, rightOffset)
-        console.log("...... remove from top and bottom", latD1, trueLat, latD2, topOffset, seekHeight,  bottomOffset)
-
-
         util.log("...... downloading texture /" + res.status + "\\")
 
         const blob = await res.blob()
         util.log("...... converting png to blob /" + res.status + "\\")
 
         util.log("...... saving png blob arraybuffer ")
-        await uploadFileToBucket(blob.stream(), texturePath+"_raw.png");
-        // await uploadFileToBucket(blob.stream(), "THETHING.png");
-
-
-        util.log("...... cropping ")
-        const ab = await blob.arrayBuffer()
-
-        const croppedBuffer = await sharp(ab)
-            .extract({
-                left: leftOffset,
-                top: topOffset,
-                width: seekWidth,
-                height: seekHeight
-            })
-            .toArray()
-        await uploadFileToBucket(croppedBuffer, texturePath);
-
-        util.log("...... Conversion done!")
+        await uploadFileToBucket(blob.stream(), texturePath);
     })
 }
 
@@ -268,7 +233,19 @@ function GetBucket() {
     return storage.bucket(process.env.BUCKET_NAME)
 }
 
-function getDimensions(width, height) {
+function getDimensions(targetBoundingBox, rawBoundingBox, rawDimensions) {
+    const tb = targetBoundingBox, rb = rawBoundingBox
+
+    console.log(tb, rb)
+    const latRatio = (tb[1] - tb[0]) / (rb[1] - rb[0])
+    const lngRatio = (tb[3] - tb[2]) / (rb[3] - rb[2])
+    // console.log(tb)
+    // console.log(rb)
+    // console.log(latRatio)
+    // console.log(lngRatio)
+    const dim = Math.max(Math.floor(rawDimensions[0] * lngRatio), Math.floor(rawDimensions[1] * latRatio))
+    return [dim, dim]
+    // console.log(result)
+
     // return [Math.floor(200 * width / height), Math.floor(200)]
-    return [640, 640]
 }

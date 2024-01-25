@@ -130,7 +130,7 @@ export function MapComponent() {
 
     const submitCoordinates = async () => {
         setLoading(true)
-        const zoom = getBoundsZoomLevel(long[0], long[1], lat[0], lat[1], { height: $('#map').height(), width: $('#map').width() })
+        const zoom = getBoundsZoomLevel(lat[0], lat[1], long[0], long[1], { height: $('#map').height(), width: $('#map').width() })
         doHeightMapConversion(long[0], long[1], lat[0], lat[1], zoom).then(r => {})
 
         setTimeout(()=>{checkStatus()}, 1000)

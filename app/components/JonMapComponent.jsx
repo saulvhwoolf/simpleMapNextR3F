@@ -49,15 +49,17 @@ export function JonMapComponent() {
     React.useEffect(()=> {
         if (map != null) {
 
-            const p1 = makePoly( 8, 10, -1, 1 , false)
+            const p1 = makePoly( -119.3, -118.85, 37.8, 38.2 , false)
             p1.setMap(map)
 
-            const p2 = makePoly(     5.513088987601728, 12.453631726025886, -3.515625, 3.515625
+            // const p2 = makePoly(  -61.13783937849957,
+            //     -60.71072909141721,
+            //     37.560546874999986,
+            //     38.439453124999986
+            //
+            //     , true)
+            // p2.setMap(map)
 
-                , true)
-            p2.setMap(map)
-
-            console.log(p1, p2)
         }
     }, [map])
 

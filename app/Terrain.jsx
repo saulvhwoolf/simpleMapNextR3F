@@ -12,21 +12,20 @@ export const Terrain = ({showWireFrame, heightMapUrl, textureUrl, heightRange, d
 
     return (
         <group>
-
-            {showWireFrame?
-                <Plane
-                    rotation={[-Math.PI / 2, 0, 0]}
-                    position={[0, -3, 0]}
-                    args={[dimRatio[0], dimRatio[1], 240, 240]}
-                >
-                    <meshStandardMaterial
-                        attach="material"
-                        color="white"
-                        wireframe={true}
-                        displacementMap={height}
-                        displacementScale={veriticalScale}
-                    />
-                </Plane>
+            <Plane
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, -3, 0]}
+                args={[dimRatio[0], dimRatio[1], 240, 240]}
+            >
+                <meshStandardMaterial
+                    attach="material"
+                    color="white"
+                    wireframe={true}
+                    displacementMap={height}
+                    displacementScale={veriticalScale}
+                />
+            </Plane>
+            {showWireFrame?<></>
                 :
                 <Plane
                     rotation={[-Math.PI / 2, 0, 0]}
@@ -36,8 +35,9 @@ export const Terrain = ({showWireFrame, heightMapUrl, textureUrl, heightRange, d
                     <meshStandardMaterial
                         attach="material"
                         color="white"
-                        // wireframe={false}
+                        wireframe={false}
                         map={color}
+                        metalness={.2}
                         displacementMap={height}
                         displacementScale={veriticalScale}
                     />
