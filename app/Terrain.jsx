@@ -4,29 +4,45 @@ import * as THREE from "three";
 import {Plane} from "@react-three/drei";
 
 
-export const Terrain = ({heightMapUrl, heightRange, dimensions}) => {
+export const Terrain = ({showWireFrame, heightMapUrl, textureUrl, heightRange, dimensions}) => {
     const height = useLoader(THREE.TextureLoader, heightMapUrl);
+    let color = useLoader(THREE.TextureLoader, textureUrl);
     const dimRatio = getDimensionRatio(dimensions)
     const veriticalScale = (heightRange[1]-heightRange[0])/512
 
     return (
         <group>
-            <Plane
-                rotation={[-Math.PI / 2, 0, 0]}
-                position={[0, -3, 0]}
-                args={[dimRatio[0], dimRatio[1], 240, 240]}
-            >
-                <meshStandardMaterial
-                    attach="material"
-                    color="white"
-                    wireframe={true}
-                    // map={colors}
-                    metalness={0.2}
-                    // normalMap={normals}
-                    displacementMap={height}
-                    displacementScale={veriticalScale}
-                />
-            </Plane>
+
+            {showWireFrame?
+                <Plane
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    position={[0, -3, 0]}
+                    args={[dimRatio[0], dimRatio[1], 240, 240]}
+                >
+                    <meshStandardMaterial
+                        attach="material"
+                        color="white"
+                        wireframe={true}
+                        displacementMap={height}
+                        displacementScale={veriticalScale}
+                    />
+                </Plane>
+                :
+                <Plane
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    position={[0, -3, 0]}
+                    args={[dimRatio[0], dimRatio[1], 240, 240]}
+                >
+                    <meshStandardMaterial
+                        attach="material"
+                        color="white"
+                        // wireframe={false}
+                        map={color}
+                        displacementMap={height}
+                        displacementScale={veriticalScale}
+                    />
+                </Plane>
+            }
         </group>
     );
 };

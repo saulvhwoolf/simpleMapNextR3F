@@ -2,39 +2,43 @@ import {NextRequest, NextResponse} from "next/server";
 
 import path from "path";
 import {generateFilename} from "../../util";
-import {Storage} from "@google-cloud/storage";
 import * as util from "../../util";
 
-
-export async function GET(request: NextRequest) {
-    util.log("........ checking " + request.url)
+export async function GET(request) {
 
     const val = getAndValidateCoordinates(request)
     const coords = val[0], err = val[1]
+    util.log("... GETTING HEIGHTMAP: " + coords + "|||" + err)
     if (err != null) {
         return NextResponse.json({status: 500, message: err});
     }
 
-    let wireframeUrl = "/wireframe?"
-    if (request.url != undefined) {
-        wireframeUrl += request.url.split("?")[1]
-    }
+    const wireframeUrl = "/wireframe?" + request.url.split("?")[1]
 
-    const filepath = "public"
     const filename = generateFilename(coords)
-    const jpgFilename = filename + ".jpg"
-    // const tifFilename = filename + ".tif"
-    const jsonFilename = filename + ".json"
-    const jpgPath = filepath + path.sep + jpgFilename
-    // const tifPath = filepath + path.sep + tifFilename
-    const jsonPath = filepath + path.sep + jsonFilename
 
-    if (await bucketHasFile(jpgPath) && await bucketHasFile(jsonPath)) {
-        util.log("........ SUCCESS FOUND FILES [" + jpgFilename + ", " + jsonPath + "]")
-        return NextResponse.json({status: 200, ready: false, message: "done", "img": jpgFilename, "json": jsonFilename, "url":wireframeUrl})
-    } else {
-        return NextResponse.json({status: 204, ready: true, message: "still working"})
-    }
+    const jpgFilename = filename + ".jpg"
+    const jsonFilename = filename + ".json"
+    const pngFilename = filename + ".png"
+
+    // const bucketPath = "https://storage.googleapis.com/ele-map-collection/public"
+    // const jpgBucketPath = bucketPath + "/" + jpgFilename
+    // const jsonBucketPath = bucketPath + "/" + jsonFilename
+
+    const publicPath = "api/fromBucket"
+    const jpgPublicPath = publicPath + "?file=public/" + jpgFilename
+    const jsonPublicPath = publicPath + "?file=public/" + jsonFilename
+    const pngPublicPath = publicPath + "?file=public/" + pngFilename
+
+    return NextResponse.json({
+        status: 200,
+        ready: false,
+        message: "done",
+        "img": jpgPublicPath,
+        "json": jsonPublicPath,
+        "url": wireframeUrl,
+        "png":pngPublicPath,
+    })
 }
 
 function getAndValidateCoordinates(request) {
@@ -74,21 +78,4 @@ function isValidLatitude(lat) {
     return !isNaN(lat) && ((-180 < lat) && (lat < 180))
 }
 
-// ********   FILES  **********
-async function bucketHasFile(filename) {
-    const res = await GetBucket().file(filename).exists()
-    return res[0]
-}
-
-function GetBucket(){
-    const storage = new Storage({
-        projectId: process.env.PROJECT_ID,
-        credentials: {
-            client_email: process.env.CLIENT_EMAIL,
-            private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n')
-        },
-    });
-
-    return storage.bucket(process.env.BUCKET_NAME)
-}
 

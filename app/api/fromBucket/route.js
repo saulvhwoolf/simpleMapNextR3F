@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import * as util from "../../util";
 
 
-export async function GET(request: NextRequest) {
+export async function GET(request) {
     let file = request.nextUrl.searchParams.get("file")
     util.log("... FORWARDING FILE FROM BUCKET: "+ file)
 

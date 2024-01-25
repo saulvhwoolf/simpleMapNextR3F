@@ -3,9 +3,10 @@
 import React from 'react'
 import {GoogleMap, useJsApiLoader} from '@react-google-maps/api';
 import Link from "next/link";
-import {doHeightMapConversion} from "../util";
+import {doHeightMapConversion, getBoundsZoomLevel} from "../util";
 import MapMovepad from "./MapMovepadComponent";
 import * as styles from "./MapComponent.module.css"
+import $ from 'jquery';
 
 
 const containerStyle = {
@@ -83,9 +84,16 @@ export function MapComponent() {
             poly.setMap(map)
             setSelectionPolygon(poly)
             map.setCenter({lat: (lat1 + lat2) / 2, lng: (long1 + long2) / 2})
+
+            const zoom = getBoundsZoomLevel(lat1, lat2, long1, long2, { height: $('#map').height(), width: $('#map').width() })
+            map.setZoom(zoom)
+
         } else {
             selectionPolygon.setPath(pathCoords)
             map.setCenter({lat: (lat1 + lat2) / 2, lng: (long1 + long2) / 2})
+
+            const zoom = getBoundsZoomLevel(lat1, lat2, long1, long2, { height: $('#map').height(), width: $('#map').width() })
+            map.setZoom(zoom)
         }
     }
 
@@ -94,6 +102,7 @@ export function MapComponent() {
         let lat2 = parseFloat(document.getElementById("max_lat").value)
         let long1 = parseFloat(document.getElementById("min_long").value)
         let long2 = parseFloat(document.getElementById("max_long").value)
+
         if ((!isNaN(lat1) && !isNaN(lat2) && !isNaN(long1) && !isNaN(long2)) && (lat1 < lat2 && long1 < long2)) {
             updateCoords(lat1, lat2, long1, long2)
         } else {
@@ -121,7 +130,9 @@ export function MapComponent() {
 
     const submitCoordinates = async () => {
         setLoading(true)
-        doHeightMapConversion(long[0], long[1], lat[0], lat[1]).then(r => {})
+        const zoom = getBoundsZoomLevel(long[0], long[1], lat[0], lat[1], { height: $('#map').height(), width: $('#map').width() })
+        doHeightMapConversion(long[0], long[1], lat[0], lat[1], zoom).then(r => {})
+
         setTimeout(()=>{checkStatus()}, 1000)
     }
 
@@ -148,14 +159,13 @@ export function MapComponent() {
         return Math.round(i*100)/100
     }
 
-
     return (
         <>
             <ul className={styles.locationList}>
                 <li onClick={()=>{updateCoords(29.5, 30.5, 84, 85)}} className={styles.locationListItem}>Everest</li>
                 <li onClick={()=>{updateCoords(37.65, 38.05, -119.65, -119.45)}} className={styles.locationListItem}>Yosemite</li>
-                {/*<li onClick={()=>{updateCoords(-23.00, -22.75, -43.35, -43.05)}} className={styles.locationListItem}>Rio</li>*/}
-                {/*<li onClick={()=>{updateCoords(44, 44.07, -70.55, -70.5)}} className={styles.locationListItem}>Pleasant Lake</li>*/}
+                <li onClick={()=>{updateCoords(-23.00, -22.75, -43.35, -43.05)}} className={styles.locationListItem}>Rio</li>
+                <li onClick={()=>{updateCoords(44, 44.07, -70.55, -70.5)}} className={styles.locationListItem}>Pleasant Lake</li>
                 <li onClick={()=>{updateCoords(36.05, 36.85, -111.55, -112.85)}} className={styles.locationListItem}>Grand Canyon</li>
             </ul>
             <div>
@@ -192,14 +202,14 @@ export function MapComponent() {
                     <form action="@/app/components/MapComponent" onChange={onCoordInputUpdate}>
                         <br/>
                         <label htmlFor="max_lat">Max Latitude</label>
-                        <input id={"max_lat"} type="number" step={.05} defaultValue={lat[1]}/><br/>
+                        <input id={"max_lat"} key={"max_lat"} type="number" step={.05} defaultValue={lat[1]}/><br/>
                         <label htmlFor="min_lat">Min Latitude</label>
-                        <input id={"min_lat"} type="number" step={.05} defaultValue={lat[0]}/><br/>
+                        <input id={"min_lat"} key={"min_lat"} type="number" step={.05} defaultValue={lat[0]}/><br/>
                         <br/>
                         <label htmlFor="max_long">Max Longitude</label>
-                        <input id={"max_long"} type="number" step={.05} defaultValue={long[1]}/><br/>
+                        <input id={"max_long"} key={"max_long"} type="number" step={.05} defaultValue={long[1]}/><br/>
                         <label htmlFor="min_long">Min Longitude</label>
-                        <input id={"min_long"} type="number" step={.05} defaultValue={long[0]}/><br/>
+                        <input id={"min_long"} key={"min_long"} type="number" step={.05} defaultValue={long[0]}/><br/>
                         <br/>
                     </form>
                     <button disabled={!valid} className={(valid || loading) ? styles.enabledButtonStyle : styles.disabledButtonStyle}
