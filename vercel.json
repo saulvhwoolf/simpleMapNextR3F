@@ -1,7 +1,11 @@
 
 {
   "functions": {
-    "app/api/doHeightMapConversion/route.ts": {
+    "app/api/doHeightMapConversion": {
+      "memory": 3008,
+      "maxDuration": 60
+    },
+    "app/api/*": {
       "memory": 3008,
       "maxDuration": 60
     }
