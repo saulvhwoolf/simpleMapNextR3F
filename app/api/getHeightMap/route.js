@@ -8,7 +8,7 @@ export async function GET(request) {
 
     const val = getAndValidateCoordinates(request)
     const coords = val[0], err = val[1]
-    util.log("... GETTING HEIGHTMAP: " + coords + "|||" + err)
+    util.log("=> GETTING HEIGHTMAP: " + coords + "|||" + err)
     if (err != null) {
         return NextResponse.json({status: 500, message: err});
     }
@@ -20,10 +20,6 @@ export async function GET(request) {
     const jpgFilename = filename + ".jpg"
     const jsonFilename = filename + ".json"
     const pngFilename = filename + ".png"
-
-    // const bucketPath = "https://storage.googleapis.com/ele-map-collection/public"
-    // const jpgBucketPath = bucketPath + "/" + jpgFilename
-    // const jsonBucketPath = bucketPath + "/" + jsonFilename
 
     const publicPath = "api/fromBucket"
     const jpgPublicPath = publicPath + "?file=public/" + jpgFilename

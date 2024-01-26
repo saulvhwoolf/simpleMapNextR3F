@@ -4,7 +4,7 @@ import * as util from "../../util";
 
 export async function GET(request) {
     let file = request.nextUrl.searchParams.get("file")
-    util.log("... FORWARDING FILE FROM BUCKET: "+ file)
+    util.log("=> FORWARDING file from bucket: "+ file)
 
     const url = "https://storage.googleapis.com/ele-map-collection/"+file
 

@@ -8,7 +8,7 @@ import {Storage} from "@google-cloud/storage";
 import * as util from "../../util";
 
 export async function GET(request) {
-    util.log("HANDLING... " + request.url)
+    util.log("=> CONVERTING ... " + request.url)
 
     const res = getAndValidateCoordinates(request)
     const coords = res[0], err = res[1], zoom = res[2]
@@ -18,9 +18,9 @@ export async function GET(request) {
 
     const wireframeUrl = "/wireframe?" + request.url.split("?")[1]
     const apiQueryUrl = generateQueryUrl(coords)
-    util.log("... API DEM URL: " + apiQueryUrl)
-    const textureQueryUrl = getTextureUrlFromLatLngBounds([coords["south"], coords["north"], coords["west"], coords["east"], ])
-    util.log("... API TEXTURE URL: " + textureQueryUrl)
+    util.log("... dem url: " + apiQueryUrl)
+    const textureQueryUrl = getTextureUrlFromLatLngBounds([coords["south"], coords["north"], coords["west"], coords["east"],])
+    util.log("... texture url: " + textureQueryUrl)
 
     const filename = generateFilename(coords)
     const jpgFilename = filename + ".jpg", tifFilename = filename + ".tif",
@@ -35,7 +35,7 @@ export async function GET(request) {
         jsonPublicPath = publicPath + "/" + jsonFilename
 
     if (await bucketHasFile(jpgPath) && await bucketHasFile(jsonPath) && await bucketHasFile(pngPath)) {
-        util.log("... ALREADY DOWNLOADED [" + jpgFilename + "] -- sending response")
+        util.log("... already downloaded [" + jpgFilename + "] -- sending response")
         return NextResponse.json({"img": jpgPublicPath, "json": jsonPublicPath, "url": wireframeUrl})
     } else {
         util.log("... DOWNLOADING AND CONVERTING [" + tifFilename + "] ...")
@@ -104,27 +104,27 @@ function generateQueryUrl(coords) {
 // ********   FILES  **********
 
 async function downloadTexture(textureUrl, texturePath) {
+    let start = Date.now()
     await fetch(textureUrl, {}).then(async (res) => {
-        util.log("...... downloading texture /" + res.status + "\\")
+        util.log("... [" + Date.now() - start + "] downloaded texture /" + res.status + "\\")
+        start = Date.now()
 
         const blob = await res.blob()
-        util.log("...... converting png to blob /" + res.status + "\\")
 
-        util.log("...... saving png blob arraybuffer ")
         await uploadFileToBucket(blob.stream(), texturePath);
+        util.log("... [" + Date.now() - start + "] saved png texture ")
     })
 }
 
 
 async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath) {
+    let start = Date.now()
     await fetch(url, {}).then(async (res) => {
-        util.log("...... downloading tif /" + res.status + "\\")
+        util.log("... [" + Date.now() - start + "] downloaded tif /" + res.status + "\\")
+        start = Date.now()
 
         const blob = await res.blob()
-        util.log("...... converting tif to blob /" + res.status + "\\")
-
         const tiff = await fromArrayBuffer(await blob.arrayBuffer());
-        util.log("...... blob to arraybuffer")
 
         const image = await tiff.getImage(), raster = await image.readRasters();
         const width = image.getWidth(), height = image.getHeight();
@@ -150,14 +150,15 @@ async function downloadTifJpgJson(url, tifPath, tifPublicPath, jpgPath, jsonPath
         const jpegImageData = {data: rgbaBuffer, width: width, height: height};
         const jpegBuffer = jpeg.encode(jpegImageData, 90).data;
 
-        util.log("...... Saving Jpg")
         await uploadFileToBucket(jpegBuffer, jpgPath);
+        util.log("... [" + Date.now() - start + "] Saved Jpg")
+        start = Date.now()
 
-        util.log("...... Saving Json")
         await uploadFileToBucket(JSON.stringify({
             "MIN": min, "MAX": max,
             "WIDTH": width, "HEIGHT": height
         }), jsonPath);
+        util.log("... [" + Date.now() - start + "] Saved Json")
 
 
         util.log("...... Conversion done!")
@@ -171,15 +172,13 @@ async function uploadFileToBucket(fileIn, filename) {
 
     file.save(fileIn, (err) => {
         if (!err) {
-            util.log("... upload successful: " + filename);
+            util.log("...... upload successful: " + filename);
         } else {
-            util.log("... !upload failed!: " + filename + " ||||| " + err);
+            util.log("...... !upload failed!: " + filename + " ||||| " + err);
         }
     });
 
-    const ifExist = (await file.exists())[0]; // (await brackets) needed
-    util.log("... " + ifExist + " <-- found file?")
-    return ifExist
+    return (await file.exists())[0]; // (await brackets) needed
 }
 
 
