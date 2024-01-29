@@ -37,6 +37,7 @@ export function MapComponent() {
             zoom: 8,
             center: {lat: (lat[0] + lat[1]) / 2, lng: (long[0] + long[1]) / 2},
             mapTypeId: "terrain",
+            disableDefaultUI: true
         });
 
         selectionPolygon?.setMap(map)
@@ -219,6 +220,7 @@ export function MapComponent() {
                 <button disabled={!valid}
                         className={(valid || loading) ? styles.enabledButtonStyle : styles.disabledButtonStyle}
                         onClick={submitCoordinates}> {loading ? "generating... please be patient (click again 30s if nothing happens)" : "Generate 3d"}</button>
+
 
                 <p>Current Area: {area} degrees^2</p>
                 {area>4? <p>NOTE: RUNNING ON MINIMAL SERVER -- LARGE AREAS TAKE A WHILE TO DOWNLOAD</p> :<></>}

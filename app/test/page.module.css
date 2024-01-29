@@ -1,0 +1,154 @@
+.main {
+    display: block;
+    width: 100vw;
+    min-height: 100vh;
+}
+
+.mapContainer {
+    width: calc(100% - 401px);
+    height: 100vh;
+    float: right;
+}
+
+.controlContainer {
+    width: 400px;
+    float: left;
+    /*border: thin solid black;*/
+    padding: 10px;
+    /*padding-top: 300px;*/
+
+}
+
+@media (max-width:960px) {
+    .mapContainer {
+        width: 100%;
+        height: calc(60vh);
+        float: right;
+    }
+
+    .controlContainer {
+        width: 100%;
+        float: none;
+        padding: 0;
+    }
+
+}
+
+
+.in {
+    width: 70px
+}
+
+.spacer {
+    display: inline-block;
+    width: 70px;
+}
+
+.latitudeHeader {
+    display: block;
+    position: absolute;
+    top: 0px;
+    /*top : -10px;*/
+    left: calc(50% - 60px);
+}
+
+.longitudeHeader {
+    display: block;
+    position: absolute;
+    left: 25px;
+    bottom: 0;
+    transform: rotate(-90deg);
+    transform-origin: bottom left;
+    -webkit-transform: rotate(-90deg);
+    -webkit-transform-origin: bottom left;
+    -moz-transform: rotate(-90deg);
+    -mox-transform-origin: bottom left;
+    -ms-transform: rotate(-90deg);
+    -ms-transform-origin: bottom left;
+    -o-transform: rotate(-90deg);
+    -o-transform-origin: bottom left;
+}
+
+
+.locationList {
+    list-style: none;
+}
+
+.locationListItem {
+    display: inline-block;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 3px 5px;
+    border: thin solid black;
+    scale: 1.0;
+    cursor: pointer;
+}
+
+.locationListItem:hover {
+    scale: 1.1;
+}
+
+
+.submitButton {
+    background-color: rgb(2,117,255);
+    color: white;
+    border: none;
+    padding: 4px 6px;
+    font-size: 24px;
+    margin: 3px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+
+.submitButton:hover {
+    background-color: rgb(50,175,255);
+}
+
+.submitButton.disabled {
+    cursor: default;
+    background-color: rgb(40,40,40);
+    color: rgb(190,190,190);
+}
+
+
+.submitButton.struck {
+    text-decoration:line-through;
+}
+
+.loading {
+    /*font-size: 30px;*/
+}
+
+.loading:after {
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: bottom;
+    -webkit-animation: ellipsis steps(4,end) 900ms infinite;
+    animation: ellipsis steps(4,end) 900ms infinite;
+    content: "\2026"; /* ascii code for the ellipsis character */
+    width: 0px;
+}
+
+@keyframes ellipsis {
+    to {
+        width: 1.25em;
+    }
+}
+
+@-webkit-keyframes ellipsis {
+    to {
+        width: 1.25em;
+    }
+}
+
+
+.mapLink {
+    display: block;
+    text-align: center;
+    margin: 0 auto;
+    font-size: 30px;
+    font-weight: bolder;
+    color: blue;
+    text-decoration: underline;
+}

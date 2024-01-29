@@ -113,6 +113,12 @@ main {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 10vw;
+  padding: 0px;
   min-height: 100vh;
+}
+
+
+
+button {
+  overflow: hidden;
 }

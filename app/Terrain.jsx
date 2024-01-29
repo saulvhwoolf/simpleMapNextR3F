@@ -22,12 +22,12 @@ export const Terrain = ({showWireFrame, heightMapUrl, textureUrl, heightRange, d
 
 
     const verticalScale = multiplier * (heightRange[1] - heightRange[0]) / 10
-        // const verticalScale = 5
     console.log(verticalScale, dimRatio, heightRange[0], heightRange[1], dimensions[0], dimensions[1])
 
     return (
         <group>
             <Plane
+                visible={showWireFrame}
                 rotation={[-Math.PI / 2, 0, 0]}
                 position={[0, -3, 0]}
                 args={[dimRatio[0], dimRatio[1], 240, 240]}
@@ -40,23 +40,24 @@ export const Terrain = ({showWireFrame, heightMapUrl, textureUrl, heightRange, d
                     displacementScale={verticalScale}
                 />
             </Plane>
-            {showWireFrame ? <></>
-                :
-                <Plane
-                    rotation={[-Math.PI / 2, 0, 0]}
-                    position={[0, -3, 0]}
-                    args={[dimRatio[0], dimRatio[1], 240, 240]}
-                >
-                    <meshStandardMaterial
-                        attach="material"
-                        color="white"
-                        map={color}
-                        metalness={.2}
-                        displacementMap={height}
-                        displacementScale={verticalScale}
-                    />
-                </Plane>
-            }
+            {/*{showWireFrame ? <></>*/}
+            {/*    :*/}
+            <Plane
+                visible={!showWireFrame}
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, -3, 0]}
+                args={[dimRatio[0], dimRatio[1], 1000, 1000]}
+            >
+                <meshStandardMaterial
+                    attach="material"
+                    color="white"
+                    map={color}
+                    metalness={.2}
+                    displacementMap={height}
+                    displacementScale={verticalScale}
+                />
+            </Plane>
+            {/*}*/}
         </group>
     );
 };
