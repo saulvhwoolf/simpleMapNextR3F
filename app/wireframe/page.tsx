@@ -1,5 +1,5 @@
 import styles from './page.module.css'
-import {Map3dComponent} from '../components/Map3dComponent';
+import {Map3dComponent} from '../components/Map3dWidget/Map3dComponent';
 import Link from "next/link";
 
 

@@ -21,16 +21,16 @@ export const Terrain = ({showWireFrame, heightMapUrl, textureUrl, heightRange, d
     // const dimRatio = (dimensions[0] > dimensions[1]? [MAX_WIDTH_OR_HEIGHT, n] : [n, MAX_WIDTH_OR_HEIGHT])
 
 
-    const verticalScale = multiplier * (heightRange[1] - heightRange[0]) / 10
+    const verticalScale = multiplier * (heightRange[1] - heightRange[0]) / 20
     console.log(verticalScale, dimRatio, heightRange[0], heightRange[1], dimensions[0], dimensions[1])
 
     return (
         <group>
             <Plane
-                visible={showWireFrame}
+                // visible={showWireFrame}
                 rotation={[-Math.PI / 2, 0, 0]}
                 position={[0, -3, 0]}
-                args={[dimRatio[0], dimRatio[1], 240, 240]}
+                args={[dimRatio[0], dimRatio[1], 50, 50]}
             >
                 <meshStandardMaterial
                     attach="material"

@@ -1,10 +1,10 @@
 "use client";
 import React, {Suspense, useEffect, useState} from "react";
 import {Canvas} from "@react-three/fiber";
-import {Terrain} from "../Terrain";
-import {OrbitControls, Sky} from "@react-three/drei";
+import {Terrain} from "./Terrain";
+import {OrbitControls, Sky, Sphere} from "@react-three/drei";
 import {useSearchParams} from "next/navigation";
-import {getHeightMap} from "../util";
+import {getHeightMap} from "../../util";
 import * as styles from "./Map3dComponent.module.css"
 
 
@@ -44,10 +44,15 @@ export function Map3dComponent() {
                     <button onClick={toggleWireframeVisibility}>Toggle Wireframe {showWireframe?"Off":"On"}</button>
                     <div className={styles.cellContainer}>
                         <Canvas camera={{position: [10, 30, 40] }}>
-                            <fog attach="fog" args={["white", 10, 130]} />
+                            <fog attach="fog" args={["white", 40, 100]} />
                             <OrbitControls autoRotate={true} autoRotateSpeed={1}/>
-                            <ambientLight/>
-                            <pointLight intensity={4} position={[7, 500, 100]}/>
+                            {/*<ambientLight/>*/}
+                            {/*<Sphere position={[0, 10, 0]}>*/}
+                            {/*    <meshStandardMaterial color="hotpink" />*/}
+                            {/*</Sphere>*/}
+                            <directionalLight position={[5, 5, 5]} intensity={2} />
+                            <directionalLight position={[-5, -5, -5]} intensity={1} />
+                            <pointLight intensity={10} position={[0, 10, 0]} color="#fff"/>
                             <Sky sunPosition={[7, 5, 1]}/>
                             <Suspense fallback={null}>
                                 <Terrain showWireFrame={showWireframe} heightMapUrl={heightMapUrl}

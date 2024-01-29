@@ -82,11 +82,15 @@ export default function HomePage() {
                 }
             }
         } else if (event[0] === "slider") {
-            const sliderValue = Math.max(parseInt(event[1]) / 10, .01)
-            const decimals = (Math.floor(sliderValue) - 5 ) / 4
-            const value = (sliderValue % 1)
-            const result = Math.round(1000000 * value * Math.pow(10, decimals)) / 1000000
-            console.log(sliderValue, result)
+            const steps = [.00001, .00005, .0001, .0005, .001, .005, .01, .05, .1, .5, 1, 5]
+
+            const index = Math.floor((event[1]/100) * steps.length)
+            // const sliderValue = Math.max(parseInt(event[1]) / 10, .01)
+            // const decimals = (Math.floor(sliderValue) - 5 ) / 4
+            // const value = (sliderValue % 1)
+            // const result = Math.round(1000000 * value * Math.pow(10, decimals)) / 1000000
+            const result = steps[index]
+            console.log(event[1] , index, result)
             setStepsize(result)
         } else if (event[0] === "center") {
             let width = neCoord.lng - swCoord.lng,
@@ -183,6 +187,8 @@ export default function HomePage() {
 
                 <p>You can also adjust the longitude and latitude manually:</p>
                 <div style={{position:"relative", display:"block", textAlign: "center"}}>
+                    <input id={"step_size"} key={"step_size"} type="number" step={.01} value={stepsize}  className={styles.in}/>
+
                     <form action="" onChange={onCoordInputUpdate} style={{display:"inline-block"}}>
                         {/*<span className={styles.latitudeHeader}>{"[---Latitude---]"}</span>*/}
                         {/*<span className={styles.longitudeHeader}>{"[---Longitude---]"}</span>*/}
